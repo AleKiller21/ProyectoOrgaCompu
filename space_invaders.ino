@@ -28,6 +28,7 @@ WHITE,BLACK,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,BLACK,WHITE,
 BLACK,BLACK,BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,BLACK,BLACK,
 };
 
+<<<<<<< HEAD
 //spaceship
 int spaceship_posx;
 
@@ -39,6 +40,13 @@ void setup() {
   VGA.begin(VGAWISHBONESLOT(9),CHARMAPWISHBONESLOT(10));
   spaceship_posx=70;
   isShot = false;
+=======
+int i, spaceship_posx;
+
+void setup() {
+  VGA.begin(VGAWISHBONESLOT(9),CHARMAPWISHBONESLOT(10));
+  i=0,spaceship_posx=70;
+>>>>>>> b0d1d345bb58c17f07a538560b851c6c8cbd3347
 }
 
 void loop(){
@@ -48,8 +56,13 @@ void loop(){
   VGA.writeArea(50, 6, 11, 8, alien);
   VGA.writeArea(75, 6, 11, 8, alien);
   delay(100);
+<<<<<<< HEAD
   
   //moverse
+=======
+  i++;
+  
+>>>>>>> b0d1d345bb58c17f07a538560b851c6c8cbd3347
   if(digitalRead(FPGA_BTN_0))
   {
     spaceship_posx--;
@@ -58,6 +71,7 @@ void loop(){
   {
     spaceship_posx++;
   }
+<<<<<<< HEAD
   
   //disparar
   if(digitalRead(FPGA_BTN_2))
@@ -83,4 +97,11 @@ void loop(){
       }
     }
   }
+=======
+}
+
+void draw()
+{
+  
+>>>>>>> b0d1d345bb58c17f07a538560b851c6c8cbd3347
 }
