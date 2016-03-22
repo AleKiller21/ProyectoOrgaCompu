@@ -11,10 +11,17 @@ GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN
 };
 
 unsigned char shot[]={
-WHITE,
-WHITE,
-WHITE,
-WHITE
+GREEN,
+GREEN,
+GREEN,
+GREEN
+};
+
+unsigned char shotAlien[]={
+GREEN,
+GREEN,
+GREEN,
+GREEN
 };
 
 unsigned char alien1[]={
@@ -101,12 +108,20 @@ int shot_posy, shot_posx;
 boolean isShot;
 
 //aliens
-boolean alienAnimType, moveDirection, goDown;
-int alienNum, animateAlien, alienCols, alienRows;
+boolean alienAnimType, moveDirection, goDown, alienShooting;
+
+int alienNum, animateAlien, alienCols, alienRows, alien_shot_speed, fire_next_shot, delay_next_shot;
+
 boolean alienLife[] = {1,1,1,1,1,1};
+
 int alienPos[][2] ={
 {25,10},{50,10},{75,10},
 {25,20},{50,20},{75,20}
+};
+
+int alienShots[][2] ={
+{0,0},{0,0},{0,0},
+{0,0},{0,0},{0,0}
 };
 
 //dibujar alien con vida del arreglo(animado)
@@ -145,6 +160,55 @@ int shooting()
   return -1;
 }
 
+void fireAlienShot()
+{
+  for(int i = 0; i < alienNum; i++)
+  {
+    if(alienLife[i])
+    {
+      if(i >= alienNum - alienCols && i < alienNum)
+      {
+        if(alienShots[i][1] == 0)
+        {
+          alienShots[i][0] = alienPos[i][0]+5;
+          alienShots[i][1] = alienPos[i][1]+8;
+          break;
+        }
+      }
+      
+      else
+      {
+        if(!alienLife[i + alienCols])
+        {
+          if(alienShots[i][1] == 0)
+          {
+            alienShots[i][0] = alienPos[i][0]+5;
+            alienShots[i][1] = alienPos[i][1]+8;
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
+void moveAlienShots()
+{
+  for(int i = 0; i < alienNum; i++)
+  {
+    if(alienShots[i][1] != 0)
+    {
+      VGA.writeArea(alienShots[i][0], alienShots[i][1], 1, 3, shotAlien);
+      alienShots[i][1] += alien_shot_speed;
+      
+      if(alienShots[i][1] >= VGA.getVSize()-10)
+      {
+        alienShots[i][0]= 0;
+        alienShots[i][1]= 0;
+      }
+    }
+  }
+}
 
 
 //revisar columnas muertas
@@ -217,13 +281,19 @@ void moveAliensHelper()
 
 void setup() {
   VGA.begin(VGAWISHBONESLOT(9),CHARMAPWISHBONESLOT(10));
+  
   spaceship_posx=70;
-  isShot = false;
   alienNum=6;
   animateAlien = 0;
-  alienAnimType = true;
   alienCols = 3;
   alienRows = 2;
+  alien_shot_speed = 2;
+  fire_next_shot = 15;
+  delay_next_shot = 15;
+  
+  isShot = false;
+  alienShooting = false;
+  alienAnimType = true;
   moveDirection = true;
 }
 
@@ -232,6 +302,16 @@ void loop(){
   VGA.writeArea(spaceship_posx, 110, 11, 6, spaceship);
   drawAliens();
   moveAliens();
+  
+  if(fire_next_shot >= delay_next_shot)
+  {
+    fireAlienShot();
+    fire_next_shot = 0;
+  }
+  
+  moveAlienShots();
+  
+  fire_next_shot++;
   
   //mover nave
   if(digitalRead(FPGA_BTN_0))
@@ -252,6 +332,7 @@ void loop(){
     shot_posy = 107;
     shot_posx = spaceship_posx+5;;
   }
+  
   if(isShot)
   {
     shot_posy--;
@@ -265,6 +346,7 @@ void loop(){
       
       //alien shot animation
       VGA.writeArea(alienPos[alienShot][0], alienPos[alienShot][1], 11, 8, explosion);
+      alien_shot_speed++;
       delay(30);
     }
   }
