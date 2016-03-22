@@ -1,6 +1,8 @@
 #include "VGA.h"     
 #include <time.h>
 
+//ARREGLOS DE DIBUJOS
+
 unsigned char spaceship[]={
 BLACK,BLACK,BLACK,BLACK,BLACK,GREEN,BLACK,BLACK,BLACK,BLACK,BLACK,
 BLACK,BLACK,BLACK,BLACK,GREEN,GREEN,GREEN,BLACK,BLACK,BLACK,BLACK,
@@ -100,8 +102,12 @@ BLACK,BLACK,WHITE,BLACK,BLACK,WHITE,BLACK,WHITE,BLACK,BLACK,WHITE,BLACK,BLACK,
 BLACK,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,BLACK
 };
 
+//-------------------------------------------------------------------------------------
+
+//VARIABLES
+
 //nave
-int spaceship_posx;
+int spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship_lives, spaceship_shot_speed;
 
 //disparo
 int shot_posy, shot_posx;
@@ -109,8 +115,13 @@ boolean isShot;
 
 //aliens
 boolean alienAnimType, moveDirection, goDown, alienShooting;
+int alienNum, animateAlien, alienCols, alienRows, alien_shot_speed, fire_next_shot, delay_next_shot, alien_speed;
 
-int alienNum, animateAlien, alienCols, alienRows, alien_shot_speed, fire_next_shot, delay_next_shot;
+boolean game_over;
+
+//-----------------------------------------------------------------------------------------------------
+
+//ARREGLOS DE POSICION
 
 boolean alienLife[] = {1,1,1,1,1,1};
 
@@ -123,6 +134,10 @@ int alienShots[][2] ={
 {0,0},{0,0},{0,0},
 {0,0},{0,0},{0,0}
 };
+
+//------------------------------------------------------------------------------------------------------
+
+//FUNCIONES DE RENDERIZADO
 
 //dibujar alien con vida del arreglo(animado)
 void drawAliens()
@@ -146,6 +161,38 @@ void drawAliens()
     }
   }
 }
+
+void moveAlienShots()
+{
+  for(int i = 0; i < alienNum; i++)
+  {
+    if(alienShots[i][1] != 0)
+    {
+      VGA.writeArea(alienShots[i][0], alienShots[i][1], 1, 3, shotAlien);
+      alienShots[i][1] += alien_shot_speed;
+      
+      if(alienShots[i][1] >= VGA.getVSize())
+      {
+        alienShots[i][0]= 0;
+        alienShots[i][1]= 0;
+      }
+    }
+  }
+}
+
+void drawGameOver()
+{
+  VGA.clear();
+  while(game_over)
+  {
+    VGA.setColor(GREEN);
+    VGA.printtext(80, 60, "GAME OVER");
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------
+
+//LOGICA
 
 //revisar si el disparo pego en un alien
 int shooting()
@@ -192,24 +239,29 @@ void fireAlienShot()
   }
 }
 
-void moveAlienShots()
+void checkCollisionAgainstPlayer()
 {
   for(int i = 0; i < alienNum; i++)
   {
     if(alienShots[i][1] != 0)
     {
-      VGA.writeArea(alienShots[i][0], alienShots[i][1], 1, 3, shotAlien);
-      alienShots[i][1] += alien_shot_speed;
-      
-      if(alienShots[i][1] >= VGA.getVSize()-10)
-      {
-        alienShots[i][0]= 0;
-        alienShots[i][1]= 0;
-      }
+      if(alienShots[i][0] >= spaceship_posx && alienShots[i][0] <= spaceship_posx + spaceship_width)
+        if(alienShots[i][1] >= spaceship_posy && alienShots[i][1] <= spaceship_posy + spaceship_height)
+        {
+          spaceship_lives--;
+          alienShots[i][0]= 0;
+          alienShots[i][1]= 0;
+          break;
+        }
     }
   }
 }
 
+void checkSpaceshipVitality()
+{
+  if(spaceship_lives <= 0)
+    game_over = true;
+}
 
 //revisar columnas muertas
 int checkOffset(int init, int condition)
@@ -236,7 +288,7 @@ void checkDirection()
   offset = checkOffset(0,alienCols);
   for(int i = offset; i < alienNum;i = i + alienCols + offset)
   {
-    if(alienPos[i][0] == 1)
+    if(alienPos[i][0] <= 1)
     {
       moveDirection = !moveDirection;
       goDown = true;
@@ -248,7 +300,7 @@ void checkDirection()
   offset = checkOffset(alienCols-1, 1);
   for(int i = alienCols - 1 - offset; i<=alienNum;i = i + alienCols - offset)
   {
-    if(alienPos[i][0] == 148)
+    if(alienPos[i][0] >= 148)
     {
       moveDirection = !moveDirection;
       goDown = true;
@@ -269,9 +321,9 @@ void moveAliensHelper()
   for(int i = 0; i<alienNum; i++)
   {
     if(moveDirection)
-      alienPos[i][0] += 1;
+      alienPos[i][0] += alien_speed;
     else
-      alienPos[i][0] -= 1;
+      alienPos[i][0] -= alien_speed;
     if(goDown)
       alienPos[i][1] += 1;
   }
@@ -279,15 +331,25 @@ void moveAliensHelper()
     goDown = false;
 }
 
+//---------------------------------------------------------------------------------------------------------
+
 void setup() {
   VGA.begin(VGAWISHBONESLOT(9),CHARMAPWISHBONESLOT(10));
   
-  spaceship_posx=70;
-  alienNum=6;
+  spaceship_posx = 70;
+  spaceship_posy = 110;
+  spaceship_width = 11;
+  spaceship_height = 6;
+  spaceship_lives = 3;
+  spaceship_shot_speed = 1;
+  
+  alienNum = 6;
   animateAlien = 0;
   alienCols = 3;
   alienRows = 2;
   alien_shot_speed = 2;
+  alien_speed = 1;
+  
   fire_next_shot = 15;
   delay_next_shot = 15;
   
@@ -295,11 +357,13 @@ void setup() {
   alienShooting = false;
   alienAnimType = true;
   moveDirection = true;
+  
+  game_over = false;
 }
 
 void loop(){
   VGA.clear();
-  VGA.writeArea(spaceship_posx, 110, 11, 6, spaceship);
+  VGA.writeArea(spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship);
   drawAliens();
   moveAliens();
   
@@ -310,6 +374,8 @@ void loop(){
   }
   
   moveAlienShots();
+  checkCollisionAgainstPlayer();
+  checkSpaceshipVitality();
   
   fire_next_shot++;
   
@@ -330,12 +396,12 @@ void loop(){
   {
     isShot = true;
     shot_posy = 107;
-    shot_posx = spaceship_posx+5;;
+    shot_posx = spaceship_posx+5;
   }
   
   if(isShot)
   {
-    shot_posy--;
+    shot_posy-= spaceship_shot_speed;
     VGA.writeArea(shot_posx, shot_posy, 1, 3, shot);
     int alienShot = shooting();
     if(alienShot != -1)
@@ -347,8 +413,15 @@ void loop(){
       //alien shot animation
       VGA.writeArea(alienPos[alienShot][0], alienPos[alienShot][1], 11, 8, explosion);
       alien_shot_speed++;
+      alien_speed++;
       delay(30);
     }
+  }
+  
+  //GameOver
+  if(game_over)
+  {
+    drawGameOver();
   }
   
   //pausa
