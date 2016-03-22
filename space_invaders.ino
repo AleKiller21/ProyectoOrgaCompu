@@ -145,15 +145,18 @@ int shooting()
   return -1;
 }
 
+
+
 //revisar columnas muertas
-int checkOffset(int side, int init)
+int checkOffset(int init, int condition)
 {
   int offset = 0;
-  for(int i = init; i < alienCols; i += side)
-  {
+  for(int i = init*-1; i < condition; i++)
+  {  
     for(int j = 0; j < alienRows; j++)
     {
-      if(alienLife[i+(j*alienCols)])
+      int temp = (i<0?i*-1:i);
+      if(alienLife[temp+(j*alienCols)])
         return offset;
     }
     offset++;
@@ -166,8 +169,8 @@ void checkDirection()
 {
   int offset;
   //cambiar a la derecha
-  offset = checkOffset(1,0);
-  for(int i = offset; i<alienNum;i = i + alienCols + offset)
+  offset = checkOffset(0,alienCols);
+  for(int i = offset; i < alienNum;i = i + alienCols + offset)
   {
     if(alienPos[i][0] == 1)
     {
@@ -178,7 +181,7 @@ void checkDirection()
   }
   
   //cambiar a la izquierda
-  offset = checkOffset(-1,148);
+  offset = checkOffset(alienCols-1, 1);
   for(int i = alienCols - 1 - offset; i<=alienNum;i = i + alienCols - offset)
   {
     if(alienPos[i][0] == 148)
@@ -203,10 +206,10 @@ void moveAliensHelper()
   {
     if(moveDirection)
       alienPos[i][0] += 1;
-     else
-       alienPos[i][0] -= 1;
-     if(goDown)
-       alienPos[i][1] += 1;
+    else
+      alienPos[i][0] -= 1;
+    if(goDown)
+      alienPos[i][1] += 1;
   }
   if(goDown)
     goDown = false;
@@ -238,7 +241,7 @@ void loop(){
   }
   if(digitalRead(FPGA_BTN_1))
   {
-    if(spaceship_posx < 160)
+    if(spaceship_posx < 149)
       spaceship_posx+= 3;
   }
   
@@ -247,13 +250,11 @@ void loop(){
   {
     isShot = true;
     shot_posy = 107;
-    shot_posx = 0;
+    shot_posx = spaceship_posx+5;;
   }
   if(isShot)
   {
     shot_posy--;
-    if(shot_posx == 0)
-      shot_posx = spaceship_posx+5;
     VGA.writeArea(shot_posx, shot_posy, 1, 3, shot);
     int alienShot = shooting();
     if(alienShot != -1)
@@ -264,19 +265,49 @@ void loop(){
       
       //alien shot animation
       VGA.writeArea(alienPos[alienShot][0], alienPos[alienShot][1], 11, 8, explosion);
+      delay(30);
     }
   }
   
   //pausa
   if(!digitalRead(FPGA_SW_0))
   {
+    //animacion de alien en pausa
+    int pauseAnim = 0;
+    boolean pauseAnimType = true;
     while(true)
     {
+      VGA.setColor(227, 38, 54);
+      VGA.printtext(60,45,"PAUSED");
+      VGA.printtext(20,60,"BUTTON 1 TO EXIT");
+      pauseAnim++;
+      if(pauseAnim == 10)
+      {
+        pauseAnimType = !pauseAnimType;
+        pauseAnim = 0;
+      }
+      
+      if(pauseAnimType){
+        VGA.writeArea(75, 75, 11, 8, alien1);
+      }else{
+        VGA.writeArea(75, 75, 11, 8, alien2);
+      }
+      
+      //salir de pausa
       if(digitalRead(FPGA_SW_0))
       {
         break;
       }
+      
+      //regresar al menu (como no tenemos menu solo va a clear por ahora)  
+      if(digitalRead(FPGA_BTN_0))
+      {
+        VGA.clear();
+        while(true){}
+      }
+      delay(100);
     }
   }
   delay(100);
 }
+
