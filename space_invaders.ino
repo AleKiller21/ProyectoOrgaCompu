@@ -320,33 +320,36 @@ void checkDirection()
   if(moveDirection)
   {
     offset = checkOffsetRight();
-    for(int i = alienCols-1-offset; i<=alienNum;i = i + alienCols - offset)
-    {
-      if(alienPos[i][0] >= 145)
+    int i = alienCols-1-offset;
+    //for(int i = alienCols-1-offset; i<=alienNum;i = i + alienCols - offset)
+    //{
+      if(alienLife[i] || alienLife[i + alienCols])
       {
-        if(alienLife[i])
+        if(alienPos[i][0] >= 145)
         {
           moveDirection = false;
           goDown = true;
           return;
         }
       }
-    }
-  }else{
+    //}
+  }
+  else{
     //cambiar a la derecha
     offset = checkOffsetLeft();
-    for(int i = offset; i<alienNum;i = i + alienCols + offset)
-    {
-      if(alienPos[i][0] <= 15)
+    int i = offset; i<alienNum;
+    //for(int i = offset; i<alienNum;i = i + alienCols + offset)
+    //{
+      if(alienLife[i] || alienLife[i + alienCols])
       {
-        if(alienLife[i])
+        if(alienPos[i][0] <= 15)
         {
           moveDirection = true;
           goDown = true;
           return;
         }
       }
-    }
+    //}
   }
 }
 
@@ -408,17 +411,17 @@ void loop(){
   drawAliens();
   moveAliens();
   
-  if(fire_next_shot >= delay_next_shot)
-  {
+  //if(fire_next_shot >= delay_next_shot)
+  //{
     fireAlienShot();
     fire_next_shot = 0;
-  }
+  //}
   
   moveAlienShots();
   checkCollisionAgainstPlayer();
   checkSpaceshipVitality();
   
-  fire_next_shot++;
+  //fire_next_shot++;
   
   //mover nave
   if(digitalRead(FPGA_BTN_0))
