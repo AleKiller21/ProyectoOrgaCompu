@@ -62,10 +62,10 @@ GREEN
 };
 
 unsigned char shotAlien[]={
-WHITE,
-WHITE,
-WHITE,
-WHITE
+GREEN,
+GREEN,
+GREEN,
+GREEN
 };
 
 unsigned char alien1[]={
@@ -379,10 +379,11 @@ void checkDirection()
       }
     //}
   }
-  else{
+  else
+  {
     //cambiar a la derecha
     offset = checkOffsetLeft();
-    int i = offset; i<alienNum;
+    int i = offset;
     //for(int i = offset; i<alienNum;i = i + alienCols + offset)
     //{
       if(alienLife[i] || alienLife[i + alienCols])
@@ -407,7 +408,7 @@ void moveAliens()
 
 void moveAliensHelper()
 {
-  for(int i = 0; i<alienNum; i++)
+  for(int i = 0; i < alienNum; i++)
   {
     if(moveDirection)
       alienPos[i][0] += alien_speed;
@@ -438,7 +439,7 @@ void setup() {
   spaceship_width = 11;
   spaceship_height = 6;
   spaceship_lives = 3;
-  spaceship_shot_speed = 5;
+  spaceship_shot_speed = 3;
   
   alienNum = 6;
   animateAlien = 0;
@@ -515,7 +516,6 @@ void loop(){
       VGA.writeArea(alienPos[alienShot][0], alienPos[alienShot][1], 11, 8, explosion);
       alien_shot_speed++;
       alien_speed++;
-      score += 10;
       delay(30);
     }
   }
