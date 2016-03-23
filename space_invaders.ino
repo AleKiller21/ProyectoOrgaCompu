@@ -149,7 +149,7 @@ BLACK,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,BLACK
 //VARIABLES
 
 //nave
-int spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship_lives, spaceship_shot_speed;
+int spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship_lives, spaceship_speed, spaceship_shot_speed;
 
 //disparo
 int shot_posy, shot_posx;
@@ -161,6 +161,9 @@ int heart_posx,heart_posy,heart_size;
 //aliens
 boolean alienAnimType, moveDirection, goDown, alienShooting;
 int alienNum, animateAlien, alienCols, alienRows, alien_shot_speed, fire_next_shot, delay_next_shot, alien_speed;
+
+//shields
+int shield1_resistance, shield2_resistance, shield3_resistance, shield1_posx, shield2_posx, shield3_posx, shield_posy, shield_margin, shield_width, shield_height;
 
 boolean game_over;
 
@@ -243,6 +246,21 @@ void drawLives()
   }
 }
 
+void drawShield(int shield_x, int shield_y, int shield_resistance)
+{
+  if(shield_resistance > 0)
+  {
+    if(shield_resistance <= 4)
+      VGA.writeArea(shield_x, shield_y, shield_width, shield_height, shield3);
+    
+    else if(shield_resistance <= 8)
+      VGA.writeArea(shield_x, shield_y, shield_width, shield_height, shield2);
+    
+    else if(shield_resistance <= 12)
+      VGA.writeArea(shield_x, shield_y, shield_width, shield_height, shield1);
+  }
+}
+
 //-----------------------------------------------------------------------------------------------------
 
 //LOGICA
@@ -302,8 +320,9 @@ void checkCollisionAgainstPlayer()
         if(alienShots[i][1] >= spaceship_posy && alienShots[i][1] <= spaceship_posy + spaceship_height)
         {
           spaceship_lives--;
-          alienShots[i][0]= 0;
-          alienShots[i][1]= 0;
+//          alienShots[i][0]= 0;
+//          alienShots[i][1]= 0;
+          resetAlienShot(i);
           break;
         }
     }
@@ -429,6 +448,66 @@ void moveAliensHelper()
     goDown = false;
 }
 
+void checkShieldCollision()
+{
+  if(isShot)
+  {
+    if(checkCollisionShield(shot_posx, shot_posy, shield1_posx, shield_posy, 1) || 
+       checkCollisionShield(shot_posx, shot_posy, shield2_posx, shield_posy, 2) ||
+       checkCollisionShield(shot_posx, shot_posy, shield3_posx, shield_posy, 3))
+         resetSpaceshipShot(); 
+       
+  }
+  
+  for(int i = 0; i < alienNum; i++)
+  {
+    if(alienShots[i][1] != 0)
+    {
+      if(checkCollisionShield(alienShots[i][0], alienShots[i][1], shield1_posx, shield_posy, 1) ||
+         checkCollisionShield(alienShots[i][0], alienShots[i][1], shield2_posx, shield_posy, 2) ||
+         checkCollisionShield(alienShots[i][0], alienShots[i][1], shield3_posx, shield_posy, 3))
+           {
+             resetAlienShot(i);
+             continue;
+           }
+    }
+  }
+}
+
+boolean checkCollisionShield(int shot_x, int shot_y, int shield_x, int shield_y, int num_shield)
+{
+  if(shot_x >= shield_x && shot_x <= shield_x + shield_width)
+    if(shot_y >= shield_y && shot_y <= shield_y + shield_height)
+      switch(num_shield)
+      {
+        case 1:
+          shield1_resistance--;
+          return true;
+        
+        case 2:
+          shield2_resistance--;
+          return true;
+        
+        case 3:
+          shield3_resistance--;
+          return true;
+      }
+      
+  return false;
+}
+
+void resetSpaceshipShot()
+{
+  isShot = false;
+  shot_posx = 0;
+}
+
+void resetAlienShot(int num)
+{
+  alienShots[num][0]= 0;
+  alienShots[num][1]= 0;
+}
+
 //---------------------------------------------------------------------------------------------------------
 
 void setup() {
@@ -439,6 +518,7 @@ void setup() {
   spaceship_width = 11;
   spaceship_height = 6;
   spaceship_lives = 3;
+  spaceship_speed = 4;
   spaceship_shot_speed = 3;
   
   alienNum = 6;
@@ -460,6 +540,17 @@ void setup() {
   heart_posx = 0;
   heart_posy = 100;
   
+  shield1_resistance = 12;
+  shield2_resistance = 12;
+  shield3_resistance = 12;
+  shield_margin = VGA.getHSize() / 4;
+  shield1_posx = shield_margin - 10;
+  shield2_posx = shield_margin * 2 - 5;
+  shield3_posx = shield_margin * 3;
+  shield_posy = 97;
+  shield_width = 11;
+  shield_height = 8;
+  
   game_over = false;
 }
 
@@ -467,6 +558,9 @@ void loop(){
   VGA.clear();
   VGA.writeArea(spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship);
   drawAliens();
+  drawShield(shield1_posx, shield_posy, shield1_resistance);
+  drawShield(shield2_posx, shield_posy, shield2_resistance);
+  drawShield(shield3_posx, shield_posy, shield3_resistance);
   moveAliens();
   
   //if(fire_next_shot >= delay_next_shot)
@@ -478,6 +572,7 @@ void loop(){
   moveAlienShots();
   checkCollisionAgainstPlayer();
   checkSpaceshipVitality();
+  checkShieldCollision();
   
   //fire_next_shot++;
   
@@ -485,12 +580,12 @@ void loop(){
   if(digitalRead(FPGA_BTN_0))
   {
     if(spaceship_posx > 1)
-      spaceship_posx-= 3;
+      spaceship_posx-= spaceship_speed;
   }
   if(digitalRead(FPGA_BTN_1))
   {
     if(spaceship_posx < 149)
-      spaceship_posx+= 3;
+      spaceship_posx+= spaceship_speed;
   }
   
   //disparar
@@ -509,8 +604,7 @@ void loop(){
     if(alienShot != -1)
     {
       alienLife[alienShot] = 0;
-      isShot = false;
-      shot_posx = 0;
+      resetSpaceshipShot();
       
       //alien shot animation
       VGA.writeArea(alienPos[alienShot][0], alienPos[alienShot][1], 11, 8, explosion);
