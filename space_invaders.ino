@@ -493,7 +493,6 @@ void checkAlienHit()
   {
     alienLife[alienShot] = 0;
     resetSpaceshipShot();
-    currentScore += 10 * alienType[alienShot];
     
     //alien shot animation
     VGA.writeArea(alienPos[alienShot][0], alienPos[alienShot][1], 11, 8, explosion);
