@@ -62,10 +62,10 @@ GREEN
 };
 
 unsigned char shotAlien[]={
-GREEN,
-GREEN,
-GREEN,
-GREEN
+WHITE,
+WHITE,
+WHITE,
+WHITE
 };
 
 unsigned char alien1[]={
@@ -232,6 +232,14 @@ void drawGameOver()
   {
     VGA.setColor(GREEN);
     VGA.printtext(80, 60, "GAME OVER");
+  }
+}
+
+void drawLives()
+{
+  for(int i=0;i<spaceship_lives;i++)
+  {
+    VGA.writeArea(heart_posx+(i*heart_size+i), heart_posy, heart_size, heart_size, heart);
   }
 }
 
@@ -419,14 +427,6 @@ void moveAliensHelper()
   }
   if(goDown)
     goDown = false;
-}
-
-void drawLives()
-{
-  for(int i=0;i<spaceship_lives;i++)
-  {
-    VGA.writeArea(heart_posx+(i*heart_size+i), heart_posy, heart_size, heart_size, heart);
-  }
 }
 
 //---------------------------------------------------------------------------------------------------------
