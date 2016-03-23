@@ -1,5 +1,7 @@
 #include "VGA.h"     
 #include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 //ARREGLOS DE DIBUJOS
 
@@ -158,6 +160,9 @@ boolean isShot;
 //corazon
 int heart_posx,heart_posy,heart_size;
 
+//score
+int currentScore,currentScore_posx,currentScore_posy;
+
 //aliens
 boolean alienAnimType, moveDirection, goDown, alienShooting;
 int alienNum, animateAlien, alienCols, alienRows, alien_shot_speed, fire_next_shot, delay_next_shot, alien_speed;
@@ -173,6 +178,8 @@ boolean game_over;
 
 boolean alienLife[] = {1,1,1,1,1,1};
 
+int alienType[] = {1,1,1,1,1,1};
+
 int alienPos[][2] ={
 {25,10},{50,10},{75,10},
 {25,20},{50,20},{75,20}
@@ -182,6 +189,8 @@ int alienShots[][2] ={
 {0,0},{0,0},{0,0},
 {0,0},{0,0},{0,0}
 };
+
+int HighScores[3];
 
 //------------------------------------------------------------------------------------------------------
 
@@ -219,7 +228,7 @@ void moveAlienShots()
       VGA.writeArea(alienShots[i][0], alienShots[i][1], 1, 3, shotAlien);
       alienShots[i][1] += alien_shot_speed;
       
-      if(alienShots[i][1] >= VGA.getVSize())
+      if(alienShots[i][1] >= 120)
       {
         alienShots[i][0]= 0;
         alienShots[i][1]= 0;
@@ -331,23 +340,6 @@ void checkSpaceshipVitality()
 {
   if(spaceship_lives <= 0)
     game_over = true;
-}
-
-//revisar columnas muertas
-int checkOffset(int init, int condition)
-{
-  int offset = 0;
-  for(int i = init*-1; i < condition; i++)
-  {  
-    for(int j = 0; j < alienRows; j++)
-    {
-      int temp = (i<0?i*-1:i);
-      if(alienLife[temp+(j*alienCols)])
-        return offset;
-    }
-    offset++;
-  }
-  return offset;
 }
 
 //revisar la direccion para moverse
@@ -506,10 +498,22 @@ void resetAlienShot(int num)
   alienShots[num][1]= 0;
 }
 
+  void showCurrentScore()
+  {
+    char* scorePtr = "";
+    itoa(currentScore,scorePtr,10);
+    VGA.setColor(BLUE);
+    VGA.printtext(currentScore_posx,currentScore_posy,scorePtr, true);
+  }
+
 //---------------------------------------------------------------------------------------------------------
 
 void setup() {
   VGA.begin(VGAWISHBONESLOT(9),CHARMAPWISHBONESLOT(10));
+  
+  currentScore_posx = 2;
+  currentScore_posy = 1;
+  currentScore = 0;
   
   spaceship_posx = 70;
   spaceship_posy = 110;
@@ -567,6 +571,8 @@ void loop(){
   checkCollisionAgainstPlayer();
   checkSpaceshipVitality();
   checkShieldCollision();
+  drawLives();
+  showCurrentScore();
   
   //mover nave
   if(digitalRead(FPGA_BTN_0))
@@ -597,6 +603,7 @@ void loop(){
     {
       alienLife[alienShot] = 0;
       resetSpaceshipShot();
+      currentScore += 10*alienType[alienShot];
       
       //alien shot animation
       VGA.writeArea(alienPos[alienShot][0], alienPos[alienShot][1], 11, 8, explosion);
@@ -605,9 +612,6 @@ void loop(){
       delay(30);
     }
   }
-  
-  //hearts
-  drawLives();
   
   //GameOver
   if(game_over)
