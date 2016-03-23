@@ -281,30 +281,71 @@ int checkOffset(int init, int condition)
 }
 
 //revisar la direccion para moverse
+//revisar columnas muertas
+int checkOffsetLeft()
+{
+  int offset = 0;
+  for(int i = 0; i < alienCols; i++)
+  {  
+    for(int j = 0; j < alienRows; j++)
+    {
+      if(alienLife[i+(j*alienCols)])
+        return offset;
+    }
+    offset++;
+  }
+  return offset;
+}
+
+int checkOffsetRight()
+{
+  int offset = 0;
+  for(int i = alienCols-1; i > 0; i--)
+  {  
+    for(int j = 0; j < alienRows; j++)
+    {
+      if(alienLife[i+(j*alienCols)])
+        return offset;
+    }
+    offset++;
+  }
+  return offset;
+}
+
+//revisar la direccion para moverse
 void checkDirection()
 {
   int offset;
-  //cambiar a la derecha
-  offset = checkOffset(0,alienCols);
-  for(int i = offset; i < alienNum;i = i + alienCols + offset)
-  {
-    if(alienPos[i][0] <= 1)
-    {
-      moveDirection = !moveDirection;
-      goDown = true;
-      return;
-    }
-  }
-  
   //cambiar a la izquierda
-  offset = checkOffset(alienCols-1, 1);
-  for(int i = alienCols - 1 - offset; i<=alienNum;i = i + alienCols - offset)
+  if(moveDirection)
   {
-    if(alienPos[i][0] >= 148)
+    offset = checkOffsetRight();
+    for(int i = alienCols-1-offset; i<=alienNum;i = i + alienCols - offset)
     {
-      moveDirection = !moveDirection;
-      goDown = true;
-      return;
+      if(alienPos[i][0] >= 145)
+      {
+        if(alienLife[i])
+        {
+          moveDirection = false;
+          goDown = true;
+          return;
+        }
+      }
+    }
+  }else{
+    //cambiar a la derecha
+    offset = checkOffsetLeft();
+    for(int i = offset; i<alienNum;i = i + alienCols + offset)
+    {
+      if(alienPos[i][0] <= 15)
+      {
+        if(alienLife[i])
+        {
+          moveDirection = true;
+          goDown = true;
+          return;
+        }
+      }
     }
   }
 }
@@ -341,7 +382,7 @@ void setup() {
   spaceship_width = 11;
   spaceship_height = 6;
   spaceship_lives = 3;
-  spaceship_shot_speed = 1;
+  spaceship_shot_speed = 3;
   
   alienNum = 6;
   animateAlien = 0;
