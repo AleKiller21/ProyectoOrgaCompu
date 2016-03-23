@@ -320,8 +320,6 @@ void checkCollisionAgainstPlayer()
         if(alienShots[i][1] >= spaceship_posy && alienShots[i][1] <= spaceship_posy + spaceship_height)
         {
           spaceship_lives--;
-//          alienShots[i][0]= 0;
-//          alienShots[i][1]= 0;
           resetAlienShot(i);
           break;
         }
@@ -562,19 +560,13 @@ void loop(){
   drawShield(shield2_posx, shield_posy, shield2_resistance);
   drawShield(shield3_posx, shield_posy, shield3_resistance);
   moveAliens();
-  
-  //if(fire_next_shot >= delay_next_shot)
-  //{
-    fireAlienShot();
-    fire_next_shot = 0;
-  //}
+  fireAlienShot();
+  fire_next_shot = 0;
   
   moveAlienShots();
   checkCollisionAgainstPlayer();
   checkSpaceshipVitality();
   checkShieldCollision();
-  
-  //fire_next_shot++;
   
   //mover nave
   if(digitalRead(FPGA_BTN_0))
