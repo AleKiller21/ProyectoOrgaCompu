@@ -12,6 +12,48 @@ GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,
 GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN
 };
 
+unsigned char shield1[]={
+BLACK,BLACK,BLACK,GREEN,GREEN,GREEN,GREEN,GREEN,BLACK,BLACK,BLACK,
+BLACK,BLACK,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,BLACK,BLACK,
+BLACK,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,BLACK,
+GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,
+GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,
+GREEN,GREEN,GREEN,GREEN,BLACK,BLACK,BLACK,GREEN,GREEN,GREEN,GREEN,
+GREEN,GREEN,GREEN,BLACK,BLACK,BLACK,BLACK,BLACK,GREEN,GREEN,GREEN,
+GREEN,GREEN,GREEN,BLACK,BLACK,BLACK,BLACK,BLACK,GREEN,GREEN,GREEN
+};
+
+unsigned char shield2[]={
+BLACK,BLACK,BLACK,GREEN,GREEN,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,
+BLACK,BLACK,GREEN,GREEN,GREEN,BLACK,GREEN,BLACK,BLACK,BLACK,BLACK,
+BLACK,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,BLACK,GREEN,GREEN,BLACK,
+GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,
+GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,
+GREEN,GREEN,GREEN,GREEN,BLACK,BLACK,BLACK,GREEN,GREEN,GREEN,GREEN,
+GREEN,GREEN,GREEN,BLACK,BLACK,BLACK,BLACK,BLACK,GREEN,GREEN,GREEN,
+GREEN,GREEN,GREEN,BLACK,BLACK,BLACK,BLACK,BLACK,GREEN,GREEN,GREEN
+};
+
+unsigned char shield3[]={
+BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,
+BLACK,BLACK,GREEN,BLACK,BLACK,BLACK,GREEN,BLACK,BLACK,BLACK,BLACK,
+BLACK,GREEN,GREEN,GREEN,BLACK,BLACK,GREEN,BLACK,BLACK,BLACK,BLACK,
+GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,BLACK,BLACK,GREEN,GREEN,
+GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,
+GREEN,GREEN,GREEN,GREEN,BLACK,BLACK,BLACK,GREEN,GREEN,GREEN,GREEN,
+BLACK,GREEN,GREEN,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,GREEN,GREEN,
+BLACK,GREEN,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,GREEN
+};
+
+unsigned char heart[]={
+BLACK,BLACK,RED,RED,BLACK,BLACK,
+BLACK,BLACK,RED,RED,BLACK,BLACK,
+RED,RED,RED,RED,RED,RED,
+RED,RED,RED,RED,RED,RED,
+BLACK,BLACK,RED,RED,BLACK,BLACK,
+BLACK,BLACK,RED,RED,BLACK,BLACK
+};
+
 unsigned char shot[]={
 GREEN,
 GREEN,
@@ -20,10 +62,10 @@ GREEN
 };
 
 unsigned char shotAlien[]={
-GREEN,
-GREEN,
-GREEN,
-GREEN
+WHITE,
+WHITE,
+WHITE,
+WHITE
 };
 
 unsigned char alien1[]={
@@ -112,6 +154,9 @@ int spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship
 //disparo
 int shot_posy, shot_posx;
 boolean isShot;
+
+//corazon
+int heart_posx,heart_posy,heart_size;
 
 //aliens
 boolean alienAnimType, moveDirection, goDown, alienShooting;
@@ -375,6 +420,14 @@ void moveAliensHelper()
     goDown = false;
 }
 
+void drawLives()
+{
+  for(int i=0;i<spaceship_lives;i++)
+  {
+    VGA.writeArea(heart_posx+(i*heart_size+i), heart_posy, heart_size, heart_size, heart);
+  }
+}
+
 //---------------------------------------------------------------------------------------------------------
 
 void setup() {
@@ -385,7 +438,7 @@ void setup() {
   spaceship_width = 11;
   spaceship_height = 6;
   spaceship_lives = 3;
-  spaceship_shot_speed = 3;
+  spaceship_shot_speed = 5;
   
   alienNum = 6;
   animateAlien = 0;
@@ -401,6 +454,10 @@ void setup() {
   alienShooting = false;
   alienAnimType = true;
   moveDirection = true;
+  
+  heart_size = 6;
+  heart_posx = 0;
+  heart_posy = 100;
   
   game_over = false;
 }
@@ -458,9 +515,13 @@ void loop(){
       VGA.writeArea(alienPos[alienShot][0], alienPos[alienShot][1], 11, 8, explosion);
       alien_shot_speed++;
       alien_speed++;
+      score += 10;
       delay(30);
     }
   }
+  
+  //hearts
+  drawLives();
   
   //GameOver
   if(game_over)
