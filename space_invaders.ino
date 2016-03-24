@@ -736,6 +736,23 @@ void checkLevelFinished()
     nextLevel();
 }
 
+void checkLifeHit()
+{
+  if(!isShot)
+    return;
+    
+  for(int i=0;i<spaceship_lives;i++)
+  {    
+    if(shot_posx >= heart_posx+(i*heart_size+i) && shot_posx <= heart_posx+(i*heart_size+i) + heart_size)
+      if(shot_posy >= heart_posy && shot_posy <= heart_posy + heart_size)
+      {
+        spaceship_lives--;
+        resetSpaceshipShot();
+        return;
+      }
+  }
+}
+
 //----------------------------------------------------------------------------------------------------------
 
 //MOVE CHARACTERS
@@ -784,6 +801,7 @@ void resetSpaceshipShot()
 {
   isShot = false;
   shot_posx = 0;
+  shot_posy = 0;
 }
 
 void resetAlienShot(int num)
@@ -909,6 +927,7 @@ void startGame()
            
     checkShieldCollision();  
     checkAlienHit();
+    checkLifeHit();
     checkAliensArrival();
     checkLevelFinished();
     checkGameOver();
