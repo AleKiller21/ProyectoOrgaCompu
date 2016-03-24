@@ -679,6 +679,7 @@ void checkPause()
       {
         VGA.clear();
         start = false;
+        masterReset(false);
         return;
       }
       delay(100);
