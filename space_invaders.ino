@@ -171,13 +171,18 @@ int currentScore,currentScore_posx,currentScore_posy;
 
 //aliens
 boolean alienAnimType, moveDirection, goDown, alienShooting;
-int alienNum, animateAlien, alienCols, alienRows, alien_shot_speed, alien_speed;
+int alienNum, animateAlien, alienCols, alienRows, alien_shot_speed;
+int alien_speed, alien_width, alien_height;
+unsigned char* current_alien1;
+unsigned char* current_alien2;
 
 //shields
 int shield1_resistance, shield2_resistance, shield3_resistance, shield1_posx, shield2_posx, shield3_posx;
 int shield_posy, shield_margin, shield_width, shield_height;
 
+//general
 boolean game_over;
+int current_level;
 
 //-----------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------
@@ -308,9 +313,9 @@ void drawAliens()
       }
       
       if(alienAnimType){
-        VGA.writeArea(alienPos[i][0], alienPos[i][1], 11, 8, alien1);
+        VGA.writeArea(alienPos[i][0], alienPos[i][1], alien_width, alien_height, current_alien1);
       }else{
-        VGA.writeArea(alienPos[i][0], alienPos[i][1], 11, 8, alien2);
+        VGA.writeArea(alienPos[i][0], alienPos[i][1], alien_width, alien_height, current_alien2);
       }
     }
   }
@@ -402,8 +407,8 @@ int shooting()
 {
   for(int i=0;i<alienNum;i++)
   {
-    if(shot_posx >= alienPos[i][0] && shot_posx <= alienPos[i][0]+11)
-      if(shot_posy >= alienPos[i][1] && shot_posy <= alienPos[i][1]+8)
+    if(shot_posx >= alienPos[i][0] && shot_posx <= alienPos[i][0] + alien_width)
+      if(shot_posy >= alienPos[i][1] && shot_posy <= alienPos[i][1] + alien_height)
         if(alienLife[i])
           return i;
   }
@@ -420,8 +425,8 @@ void fireAlienShot()
       {
         if(alienShots[i][1] == 0)
         {
-          alienShots[i][0] = alienPos[i][0]+5;
-          alienShots[i][1] = alienPos[i][1]+8;
+          alienShots[i][0] = alienPos[i][0] + (alien_width / 2);
+          alienShots[i][1] = alienPos[i][1] + alien_height;
           break;
         }
       }
@@ -432,8 +437,8 @@ void fireAlienShot()
         {
           if(alienShots[i][1] == 0)
           {
-            alienShots[i][0] = alienPos[i][0]+5;
-            alienShots[i][1] = alienPos[i][1]+8;
+            alienShots[i][0] = alienPos[i][0] + (alien_width / 2);
+            alienShots[i][1] = alienPos[i][1] + alien_height;
             break;
           }
         }
@@ -542,7 +547,7 @@ void checkDirection()
     //{
       if(alienLife[i] || alienLife[i + alienCols])
       {
-        if(alienPos[i][0] + 11 >= 150)
+        if(alienPos[i][0] + alien_width >= 150)
         {
           moveDirection = false;
           goDown = true;
@@ -622,7 +627,7 @@ void checkAlienHit()
     currentScore += 10*alienType[alienShot];
     
     //alien shot animation
-    VGA.writeArea(alienPos[alienShot][0], alienPos[alienShot][1], 11, 8, explosion);
+    VGA.writeArea(alienPos[alienShot][0], alienPos[alienShot][1], alien_width, alien_height, explosion);
     alien_shot_speed++;
     alien_speed++;
     delay(30);
@@ -658,9 +663,9 @@ void checkPause()
       }
       
       if(pauseAnimType){
-        VGA.writeArea(75, 75, 11, 8, alien1);
+        VGA.writeArea(75, 75, alien_width, alien_height, alien1);
       }else{
-        VGA.writeArea(75, 75, 11, 8, alien2);
+        VGA.writeArea(75, 75, alien_width, alien_height, alien2);
       }
       
       //salir de pausa
@@ -701,7 +706,7 @@ void checkAliensArrival()
     if(!alienLife[i])
       continue;
       
-    if(alienPos[i][1] + 8 >= shield_posy)
+    if(alienPos[i][1] + alien_height >= shield_posy)
     {
       game_over = true;
       break;
@@ -883,6 +888,12 @@ void startGame()
   }
 }
 
+void nextLevel()
+{
+  current_level++;
+  
+}
+
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 
@@ -909,6 +920,8 @@ void setup()
   spaceship_lives = 3;
   spaceship_speed = 4;
   spaceship_shot_speed = 3;
+  current_alien1 = alien1;
+  current_alien2 = alien2;
   
   alienNum = 6;
   animateAlien = 0;
@@ -916,6 +929,8 @@ void setup()
   alienRows = 2;
   alien_shot_speed = 2;
   alien_speed = 1;
+  alien_width = 11;
+  alien_height = 8;
   
   isShot = false;
   alienShooting = false;
@@ -938,6 +953,7 @@ void setup()
   shield_height = 8;
 
   game_over = false;
+  current_level = 1;
 }
 
 void loop()
