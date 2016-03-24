@@ -388,12 +388,20 @@ void drawShipBullet()
 }
 
 void showCurrentScore()
-  {
+{
     char* scorePtr = "";
     itoa(currentScore,scorePtr,10);
     VGA.setColor(BLUE);
     VGA.printtext(currentScore_posx,currentScore_posy,scorePtr, true);
-  }
+}
+
+void showCurrentLevel()
+{
+  char* lvl = "";
+  itoa(current_level,lvl,10);
+  VGA.setColor(BLUE);
+  VGA.printtext(150,1,lvl, true);
+}
 
 //-----------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------
@@ -869,6 +877,7 @@ void masterReset(boolean next_level)
   {
     spaceship_lives = 3;
     currentScore = 0;
+    current_level = 1;
   }
     
   shield1_resistance = 12;
@@ -915,6 +924,7 @@ void startGame()
     drawShipBullet();  
     drawAliens();
     showCurrentScore();
+    showCurrentLevel();
     
     fireAlienShot();
     moveAliens();  
@@ -946,7 +956,8 @@ void nextLevel()
   VGA.printtext(15, 50, "Ain't Over Yet!");
   masterReset(true); 
   
-  alien_speed *= ++current_level; 
+  ++current_level;
+  alien_speed *= current_level; 
   current_alien1 = octopus1;
   current_alien2 = octopus2;
   alien_width = 8;
