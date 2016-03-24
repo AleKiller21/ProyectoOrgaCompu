@@ -346,7 +346,7 @@ void drawGameOver()
   {
     VGA.setColor(GREEN);
     VGA.printtext(80, 60, "GAME OVER");
-    if(digitalRead(FPGA_BTN_0) || digitalRead(FPGA_BTN_1) || digitalRead(FPGA_BTN_2) || digitalRead(FPGA_BTN_3))
+    if(digitalRead(FPGA_BTN_3))
     {
       game_over = false;
       start = false;
