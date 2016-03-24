@@ -764,6 +764,74 @@ void resetAlienShot(int num)
   alienShots[num][0]= 0;
   alienShots[num][1]= 0;
 }
+
+void resetAliensPosition()
+{
+  int posx = 25;
+  int posy = 10;
+  int basex = 25;
+  int iterator = 0;
+  
+  for(int alien = 0; alien < alienNum; alien++)
+  {
+    if(iterator == alienNum / 2)
+    {
+      iterator = 0;
+      posy *= 2;
+    }
+      
+    posx = basex * (iterator + 1);
+    
+    for(int pos = 0; pos < 2; pos++)
+    {
+      alienPos[alien][pos] = posx;
+      posx = posy;
+    }
+    
+    iterator++;
+  }
+}
+
+void resetSpaceshipPosition()
+{
+  spaceship_posx = 70;
+  spaceship_posy = 110;
+}
+
+void masterReset()
+{
+  //Alien's life
+  //Spaceship's life
+  //Shots
+  //Positions
+  //Shields' resistance
+  
+  for(int i = 0; i < alienNum; i++)
+  {
+    alienLife[i] = 1;
+  }
+  
+  for(int i = 0; i < alienNum; i++)
+  {
+    resetAlienShot(i);
+  }
+  
+  resetSpaceshipShot();
+  resetAliensPosition();
+  resetSpaceshipPosition();
+  
+  spaceship_lives = 3;
+  shield1_resistance = 12;
+  shield2_resistance = 12;
+  shield3_resistance = 12;
+  
+  alien_shot_speed = 2;
+  alien_speed = 1;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+//OTHER LOGIC
   
 void sortScores()
 {
@@ -805,6 +873,7 @@ void startGame()
            
     checkShieldCollision();  
     checkAlienHit();
+    checkAliensArrival();
     checkGameOver();
     
     if(!start)
