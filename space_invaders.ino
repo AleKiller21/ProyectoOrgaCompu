@@ -187,7 +187,7 @@ int current_level;
 //-----------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------
 
-//ARREGLOS DE POSICION
+//ARREGLOS
 
 boolean alienLife[] = {1,1,1,1,1,1};
 
@@ -203,7 +203,7 @@ int alienShots[][2] ={
 {0,0},{0,0},{0,0}
 };
 
-int HighScores[3];
+int HighScores[3] = {0,0,0};
 
 //------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------
@@ -213,19 +213,23 @@ int HighScores[3];
 void drawHighScores()
 {
   VGA.clear();
+  VGA.setColor(GREEN);
+  VGA.printtext(50, 30, "HIGHSCORE");
+  
+  char* scorePtr;
+  VGA.setColor(BLUE);
+  for(int i=0; i < 3; i++)
+  {
+    scorePtr = "";
+    itoa(HighScores[i],scorePtr,10);
+    VGA.printtext(45, 50 + 10*i ,scorePtr);
+  }
+  
+  VGA.setColor(RED);
+  VGA.printtext(50, 107, "BUTTON 1(MAIN MENU)");
+  
   while(true)
   {
-    VGA.setColor(GREEN);
-    VGA.printtext(50, 30, "HIGHSCORE");
-    
-    char* scorePtr = "";
-    itoa(currentScore,scorePtr,10);
-    VGA.setColor(BLUE);
-    VGA.printtext(currentScore_posx,currentScore_posy,scorePtr, true);
-    
-    VGA.setColor(RED);
-    VGA.printtext(50, 107, "BUTTON 1(MAIN MENU)");
-    
     if(digitalRead(FPGA_BTN_0))
     {
       showHighScores = false;
@@ -693,7 +697,7 @@ void checkGameOver()
   {
     if(currentScore > HighScores[2])
     {
-      HighScores[3] = currentScore;
+      HighScores[2] = currentScore;
       sortScores();
     }
     
@@ -872,13 +876,13 @@ void masterReset(boolean next_level)
 void sortScores()
 {
   int temp = 0;
-  for(int i=0; i < 3; i++)
+  for(int i = 2; i > -1; i--)
   {
-    if(HighScores[i] < HighScores[i+1])
+    if(HighScores[i] > HighScores[i-1])
     {
-      temp = HighScores[i];
-      HighScores[i] = HighScores[i+1];
-      HighScores[i+1] = temp;
+      temp = HighScores[i-1];
+      HighScores[i-1] = HighScores[i];
+      HighScores[i] = temp;
     }
   }
 }
