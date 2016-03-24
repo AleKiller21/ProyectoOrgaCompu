@@ -418,7 +418,7 @@ void checkDirection()
     //{
       if(alienLife[i] || alienLife[i + alienCols])
       {
-        if(alienPos[i][0] >= 145)
+        if(alienPos[i][0] + 11 >= 150)
         {
           moveDirection = false;
           goDown = true;
@@ -436,7 +436,7 @@ void checkDirection()
     //{
       if(alienLife[i] || alienLife[i + alienCols])
       {
-        if(alienPos[i][0] <= 15)
+        if(alienPos[i][0] <= 10)
         {
           moveDirection = true;
           goDown = true;
@@ -561,6 +561,21 @@ void checkGameOver()
   if(game_over)
   {
     drawGameOver();
+  }
+}
+
+void checkAliensArrival()
+{
+  for(int i = 0; i < alienNum; i++)
+  {
+    if(!alienLife[i])
+      continue;
+      
+    if(alienPos[i][1] + 8 >= shield_posy)
+    {
+      game_over = true;
+      break;
+    }
   }
 }
 
@@ -696,11 +711,11 @@ void loop()
   moveAlienShots();
   
   checkUserInput();
-  checkCollisionAgainstPlayer();
-  checkSpaceshipVitality();
-         
-  checkShieldCollision();  
   checkAlienHit();
+  checkCollisionAgainstPlayer();
+  checkSpaceshipVitality();         
+  checkShieldCollision();  
+  checkAliensArrival();
   checkGameOver();
   
   delay(100);
