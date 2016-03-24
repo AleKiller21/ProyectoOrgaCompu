@@ -350,7 +350,7 @@ void drawGameOver()
   {
     VGA.setColor(GREEN);
     VGA.printtext(80, 60, "GAME OVER");
-    if(digitalRead(FPGA_BTN_0) || digitalRead(FPGA_BTN_1) || digitalRead(FPGA_BTN_2) || digitalRead(FPGA_BTN_3))
+    if(digitalRead(FPGA_BTN_3))
     {
       game_over = false;
       start = false;
@@ -392,12 +392,20 @@ void drawShipBullet()
 }
 
 void showCurrentScore()
-  {
+{
     char* scorePtr = "";
     itoa(currentScore,scorePtr,10);
     VGA.setColor(BLUE);
     VGA.printtext(currentScore_posx,currentScore_posy,scorePtr, true);
-  }
+}
+
+void showCurrentLevel()
+{
+  char* lvl = "";
+  itoa(current_level,lvl,10);
+  VGA.setColor(BLUE);
+  VGA.printtext(150,1,lvl, true);
+}
 
 //-----------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------
@@ -740,6 +748,23 @@ void checkLevelFinished()
     nextLevel();
 }
 
+void checkLifeHit()
+{
+  if(!isShot)
+    return;
+    
+  for(int i=0;i<spaceship_lives;i++)
+  {    
+    if(shot_posx >= heart_posx+(i*heart_size+i) && shot_posx <= heart_posx+(i*heart_size+i) + heart_size)
+      if(shot_posy >= heart_posy && shot_posy <= heart_posy + heart_size)
+      {
+        spaceship_lives--;
+        resetSpaceshipShot();
+        return;
+      }
+  }
+}
+
 //----------------------------------------------------------------------------------------------------------
 
 //MOVE CHARACTERS
@@ -788,6 +813,7 @@ void resetSpaceshipShot()
 {
   isShot = false;
   shot_posx = 0;
+  shot_posy = 0;
 }
 
 void resetAlienShot(int num)
@@ -855,6 +881,7 @@ void masterReset(boolean next_level)
   {
     spaceship_lives = 3;
     currentScore = 0;
+    current_level = 1;
   }
     
   shield1_resistance = 12;
@@ -901,6 +928,7 @@ void startGame()
     drawShipBullet();  
     drawAliens();
     showCurrentScore();
+    showCurrentLevel();
     
     fireAlienShot();
     moveAliens();  
@@ -913,6 +941,7 @@ void startGame()
            
     checkShieldCollision();  
     checkAlienHit();
+    checkLifeHit();
     checkAliensArrival();
     checkLevelFinished();
     checkGameOver();
@@ -931,7 +960,8 @@ void nextLevel()
   VGA.printtext(15, 50, "Ain't Over Yet!");
   masterReset(true); 
   
-  alien_speed *= ++current_level; 
+  ++current_level;
+  alien_speed *= current_level; 
   current_alien1 = octopus1;
   current_alien2 = octopus2;
   alien_width = 8;
