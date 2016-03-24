@@ -542,7 +542,7 @@ void checkDirection()
     //{
       if(alienLife[i] || alienLife[i + alienCols])
       {
-        if(alienPos[i][0] >= 145)
+        if(alienPos[i][0] + 11 >= 150)
         {
           moveDirection = false;
           goDown = true;
@@ -560,7 +560,7 @@ void checkDirection()
     //{
       if(alienLife[i] || alienLife[i + alienCols])
       {
-        if(alienPos[i][0] <= 15)
+        if(alienPos[i][0] <= 10)
         {
           moveDirection = true;
           goDown = true;
@@ -575,10 +575,10 @@ void checkShieldCollision()
 {
   if(isShot)
   {
-    if(checkCollisionShield(shot_posx, shot_posy, shield1_posx, shield_posy, 1) || 
-       checkCollisionShield(shot_posx, shot_posy, shield2_posx, shield_posy, 2) ||
-       checkCollisionShield(shot_posx, shot_posy, shield3_posx, shield_posy, 3))
-         resetSpaceshipShot(); 
+    if(checkCollisionShield(shot_posx, shot_posy, shield1_posx, shield_posy, &shield1_resistance) ||
+       checkCollisionShield(shot_posx, shot_posy, shield2_posx, shield_posy, &shield2_resistance) || 
+       checkCollisionShield(shot_posx, shot_posy, shield3_posx, shield_posy, &shield3_resistance))    
+         resetSpaceshipShot();
        
   }
   
@@ -586,9 +586,9 @@ void checkShieldCollision()
   {
     if(alienShots[i][1] != 0)
     {
-      if(checkCollisionShield(alienShots[i][0], alienShots[i][1], shield1_posx, shield_posy, 1) ||
-         checkCollisionShield(alienShots[i][0], alienShots[i][1], shield2_posx, shield_posy, 2) ||
-         checkCollisionShield(alienShots[i][0], alienShots[i][1], shield3_posx, shield_posy, 3))
+      if(checkCollisionShield(alienShots[i][0], alienShots[i][1], shield1_posx, shield_posy, &shield1_resistance) ||
+         checkCollisionShield(alienShots[i][0], alienShots[i][1], shield2_posx, shield_posy, &shield2_resistance) ||
+         checkCollisionShield(alienShots[i][0], alienShots[i][1], shield3_posx, shield_posy, &shield3_resistance))
            {
              resetAlienShot(i);
              continue;
@@ -597,24 +597,17 @@ void checkShieldCollision()
   }
 }
 
-boolean checkCollisionShield(int shot_x, int shot_y, int shield_x, int shield_y, int num_shield)
+boolean checkCollisionShield(int shot_x, int shot_y, int shield_x, int shield_y, int* shield_resistance)
 {
+  if(*shield_resistance == 0)
+    return false;
+  
   if(shot_x >= shield_x && shot_x <= shield_x + shield_width)
     if(shot_y >= shield_y && shot_y <= shield_y + shield_height)
-      switch(num_shield)
-      {
-        case 1:
-          shield1_resistance--;
-          return true;
-        
-        case 2:
-          shield2_resistance--;
-          return true;
-        
-        case 3:
-          shield3_resistance--;
-          return true;
-      }
+    {
+      (*shield_resistance)--;
+      return true;
+    }
       
   return false;
 }
@@ -701,6 +694,21 @@ void checkGameOver()
   }
 }
 
+void checkAliensArrival()
+{
+  for(int i = 0; i < alienNum; i++)
+  {
+    if(!alienLife[i])
+      continue;
+      
+    if(alienPos[i][1] + 8 >= shield_posy)
+    {
+      game_over = true;
+      break;
+    }
+  }
+}
+
 //----------------------------------------------------------------------------------------------------------
 
 //MOVE CHARACTERS
@@ -721,7 +729,7 @@ void moveAliensHelper()
     else
       alienPos[i][0] -= alien_speed;
     if(goDown)
-      alienPos[i][1] += 1;
+      alienPos[i][1] += alien_speed;
   }
   if(goDown)
     goDown = false;
