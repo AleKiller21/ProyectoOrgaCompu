@@ -962,10 +962,21 @@ void nextLevel()
   
   ++current_level;
   alien_speed *= current_level; 
-  current_alien1 = octopus1;
-  current_alien2 = octopus2;
-  alien_width = 8;
-  alien_height = 8;
+  if(current_level == 2)
+  {
+    current_alien1 = octopus1;
+    current_alien2 = octopus2;
+    alien_width = 8;
+    alien_height = 8;
+  }
+  
+  else if(current_level == 3)
+  {
+    current_alien1 = enemy1;
+    current_alien2 = enemy2;
+    alien_width = 12;
+    alien_height = 8;
+  }
   
   delay(1500);
 }
