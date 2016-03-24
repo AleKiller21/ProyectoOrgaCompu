@@ -599,7 +599,7 @@ void moveAliensHelper()
     else
       alienPos[i][0] -= alien_speed;
     if(goDown)
-      alienPos[i][1] += 1;
+      alienPos[i][1] += alien_speed;
   }
   if(goDown)
     goDown = false;
