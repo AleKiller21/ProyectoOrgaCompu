@@ -663,9 +663,9 @@ void checkPause()
       }
       
       if(pauseAnimType){
-        VGA.writeArea(75, 75, alien_width, alien_height, alien1);
+        VGA.writeArea(75, 75, alien_width, alien_height, current_alien1);
       }else{
-        VGA.writeArea(75, 75, alien_width, alien_height, alien2);
+        VGA.writeArea(75, 75, alien_width, alien_height, current_alien2);
       }
       
       //salir de pausa
@@ -695,6 +695,8 @@ void checkGameOver()
       HighScores[3] = currentScore;
       sortScores();
     }
+    
+    masterReset(false);
     drawGameOver();
   }
 }
@@ -712,6 +714,25 @@ void checkAliensArrival()
       break;
     }
   }
+}
+
+boolean checkAliensLife()
+{
+  int contador = 0;
+  
+  for(int i = 0; i < alienNum; i++)
+  {
+    if(!alienLife[i])
+      contador++;
+  }
+  
+  return contador == 6 ? true : false;
+}
+
+void checkLevelFinished()
+{
+  if(checkAliensLife())
+    nextLevel();
 }
 
 //----------------------------------------------------------------------------------------------------------
@@ -803,7 +824,7 @@ void resetSpaceshipPosition()
   spaceship_posy = 110;
 }
 
-void masterReset()
+void masterReset(boolean next_level)
 {
   //Alien's life
   //Spaceship's life
@@ -825,13 +846,22 @@ void masterReset()
   resetAliensPosition();
   resetSpaceshipPosition();
   
-  spaceship_lives = 3;
+  if(!next_level)
+  {
+    spaceship_lives = 3;
+    currentScore = 0;
+  }
+    
   shield1_resistance = 12;
   shield2_resistance = 12;
   shield3_resistance = 12;
   
   alien_shot_speed = 2;
   alien_speed = 1;
+  current_alien1 = alien1;
+  current_alien2 = alien2;
+  alien_width = 11;
+  alien_height = 8;
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -879,6 +909,7 @@ void startGame()
     checkShieldCollision();  
     checkAlienHit();
     checkAliensArrival();
+    checkLevelFinished();
     checkGameOver();
     
     if(!start)
@@ -890,8 +921,18 @@ void startGame()
 
 void nextLevel()
 {
-  current_level++;
+  VGA.clear();
+  VGA.setColor(GREEN);
+  VGA.printtext(15, 50, "Ain't Over Yet!");
+  masterReset(true); 
   
+  alien_speed *= ++current_level; 
+  current_alien1 = octopus1;
+  current_alien2 = octopus2;
+  alien_width = 8;
+  alien_height = 8;
+  
+  delay(1500);
 }
 
 //---------------------------------------------------------------------------------------------------------
