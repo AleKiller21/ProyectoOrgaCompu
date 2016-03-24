@@ -151,6 +151,10 @@ BLACK,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,BLACK
 
 //DECLARACION DE VARIABLES
 
+//menu
+boolean start,about,showHighScores,menuAnimType, menuAlienDirection;
+int menuAnim = 0, menuAlien_posx;
+
 //nave
 int spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship_lives;
 int spaceship_speed, spaceship_shot_speed;
@@ -201,6 +205,94 @@ int HighScores[3];
 
 //FUNCIONES DE RENDERIZADO
 
+void drawHighScores()
+{
+  VGA.clear();
+  while(true)
+  {
+    VGA.setColor(GREEN);
+    VGA.printtext(50, 30, "HIGHSCORE");
+    
+    char* scorePtr = "";
+    itoa(currentScore,scorePtr,10);
+    VGA.setColor(BLUE);
+    VGA.printtext(currentScore_posx,currentScore_posy,scorePtr, true);
+    
+    VGA.setColor(RED);
+    VGA.printtext(50, 107, "BUTTON 1(MAIN MENU)");
+    
+    if(digitalRead(FPGA_BTN_0))
+    {
+      showHighScores = false;
+      delay(150);
+      return;
+    }
+  }
+}
+
+void drawMenu()
+{
+ 
+  if(menuAlien_posx == 100)
+    menuAlienDirection = false;
+  if(menuAlien_posx == 40)
+    menuAlienDirection = true;
+  
+  if(menuAlienDirection)
+    menuAlien_posx+= 2;
+  else
+    menuAlien_posx-= 2;
+  
+  menuAnim++;
+  
+  if(menuAnim == 10)
+  {
+    menuAnimType = !menuAnimType;
+    menuAnim = 0;
+  }
+  
+  if(menuAnimType){
+    VGA.writeArea(menuAlien_posx, 10, 12, 8, enemy1);
+  }else{
+    VGA.writeArea(menuAlien_posx, 10, 12, 8, enemy2);
+  }
+  
+  VGA.setColor(GREEN);
+  VGA.printtext(25, 30, "SPACE INVADERS");
+  
+  VGA.setColor(BLUE);
+  VGA.printtext(20, 60, "BUTTON 1(START)");
+  VGA.printtext(20, 80, "BUTTON 2(ABOUT)");
+  VGA.printtext(1, 100, "BUTTON 3(HIGHSCORES)");
+}
+
+void showControls()
+{
+  VGA.clear();
+  while(true)
+  {
+    VGA.setColor(BLUE);
+    VGA.printtext(5, 10, "BUTTON 1(RIGHT)");
+    VGA.writeArea(138, 10, spaceship_width, spaceship_height, spaceship);
+    VGA.printtext(5, 30, "BUTTON 2(LEFT)");
+    VGA.writeArea(128, 30, spaceship_width, spaceship_height, spaceship);
+    VGA.printtext(5, 53, "BUTTON 3(SHOOT)");
+    VGA.writeArea(133 + spaceship_width/2, 49, 1, 3, shot);
+    VGA.writeArea(133, 53, spaceship_width, spaceship_height, spaceship);
+    VGA.printtext(5, 73, "SWITCH 1(PAUSE)");
+    
+    VGA.setColor(RED);
+    VGA.printtext(3, 107, "BUTTON 1(MAIN MENU)");
+    
+    if(digitalRead(FPGA_BTN_0))
+    {
+      about = false;
+      delay(150);
+      return;
+    }
+  }
+}
+
 //dibujar alien con vida del arreglo(animado)
 void drawAliens()
 {
@@ -249,6 +341,12 @@ void drawGameOver()
   {
     VGA.setColor(GREEN);
     VGA.printtext(80, 60, "GAME OVER");
+    if(digitalRead(FPGA_BTN_0) || digitalRead(FPGA_BTN_1) || digitalRead(FPGA_BTN_2) || digitalRead(FPGA_BTN_3))
+    {
+      game_over = false;
+      start = false;
+      return;
+    }
   }
 }
 
@@ -283,6 +381,14 @@ void drawShipBullet()
     VGA.writeArea(shot_posx, shot_posy, 1, 3, shot);
   }
 }
+
+void showCurrentScore()
+  {
+    char* scorePtr = "";
+    itoa(currentScore,scorePtr,10);
+    VGA.setColor(BLUE);
+    VGA.printtext(currentScore_posx,currentScore_posy,scorePtr, true);
+  }
 
 //-----------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------
@@ -349,6 +455,24 @@ void fireShipBullets()
 //----------------------------------------------------------------------------------------------------
 
 //CHECK ACTIONS
+
+void checkMenuInput()
+{
+  if(digitalRead(FPGA_BTN_0))
+  {
+    start = true;
+  }
+  
+  if(digitalRead(FPGA_BTN_1))
+  {
+    about = true;
+  }
+  
+  if(digitalRead(FPGA_BTN_2))
+  {
+    showHighScores = true;
+  }
+}
 
 void checkCollisionAgainstPlayer()
 {
@@ -530,7 +654,7 @@ void checkPause()
     {
       VGA.setColor(227, 38, 54);
       VGA.printtext(60,45,"PAUSED");
-      VGA.printtext(20,60,"BUTTON 1 TO EXIT");
+      VGA.printtext(20,60,"BUTTON 4 TO EXIT");
       
       pauseAnim++;
       
@@ -552,11 +676,12 @@ void checkPause()
         break;
       }
       
-      //regresar al menu (como no tenemos menu solo va a clear por ahora)  
-      if(digitalRead(FPGA_BTN_0))
+      //regresar al menu
+      if(digitalRead(FPGA_BTN_3))
       {
         VGA.clear();
-        while(true){}
+        start = false;
+        return;
       }
       delay(100);
     }
@@ -567,6 +692,11 @@ void checkGameOver()
 {
   if(game_over)
   {
+    if(currentScore > HighScores[2])
+    {
+      HighScores[3] = currentScore;
+      sortScores();
+    }
     drawGameOver();
   }
 }
@@ -626,14 +756,55 @@ void resetAlienShot(int num)
   alienShots[num][0]= 0;
   alienShots[num][1]= 0;
 }
-
-  void showCurrentScore()
+  
+void sortScores()
+{
+  int temp = 0;
+  for(int i=0; i < 3; i++)
   {
-    char* scorePtr = "";
-    itoa(currentScore,scorePtr,10);
-    VGA.setColor(BLUE);
-    VGA.printtext(currentScore_posx,currentScore_posy,scorePtr, true);
+    if(HighScores[i] < HighScores[i+1])
+    {
+      temp = HighScores[i];
+      HighScores[i] = HighScores[i+1];
+      HighScores[i+1] = temp;
+    }
   }
+}
+
+void startGame()
+{
+  while(true)
+  {
+    VGA.clear();
+    VGA.writeArea(spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship);
+    
+    drawShield(shield1_posx, shield_posy, shield1_resistance);
+    drawShield(shield2_posx, shield_posy, shield2_resistance);
+    drawShield(shield3_posx, shield_posy, shield3_resistance);
+    drawLives();
+    drawShipBullet();  
+    drawAliens();
+    showCurrentScore();
+    
+    fireAlienShot();
+    moveAliens();  
+    moveAlienShots();
+    
+    checkUserInput();
+    
+    checkCollisionAgainstPlayer();
+    checkSpaceshipVitality();
+           
+    checkShieldCollision();  
+    checkAlienHit();
+    checkGameOver();
+    
+    if(!start)
+      return;
+    
+    delay(100);
+  }
+}
 
 //---------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------
@@ -641,6 +812,14 @@ void resetAlienShot(int num)
 void setup()
 {
   VGA.begin(VGAWISHBONESLOT(9),CHARMAPWISHBONESLOT(10));
+  
+  start = false;
+  about = false;
+  showHighScores = false;
+  menuAnim = 0;
+  menuAnimType = true;
+  menuAlien_posx = 64;
+  menuAlienDirection = true;
   
   currentScore_posx = 2;
   currentScore_posy = 1;
@@ -680,35 +859,21 @@ void setup()
   shield_posy = 97;
   shield_width = 11;
   shield_height = 8;
-  
+
   game_over = false;
 }
 
 void loop()
 {
   VGA.clear();
-  
-  VGA.writeArea(spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship);
-  
-  drawShield(shield1_posx, shield_posy, shield1_resistance);
-  drawShield(shield2_posx, shield_posy, shield2_resistance);
-  drawShield(shield3_posx, shield_posy, shield3_resistance);
-  drawLives();
-  drawShipBullet();  
-  drawAliens();
-  showCurrentScore();
-  
-  fireAlienShot();
-  moveAliens();  
-  moveAlienShots();
-  
-  checkUserInput();
-  checkCollisionAgainstPlayer();
-  checkSpaceshipVitality();
-         
-  checkShieldCollision();  
-  checkAlienHit();
-  checkGameOver();
+  drawMenu();
+  checkMenuInput();
+  if(start)
+    startGame();
+  if(about)
+    showControls();
+  if(showHighScores)
+    drawHighScores();
   
   delay(100);
 }
