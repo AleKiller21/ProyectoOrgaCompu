@@ -421,8 +421,8 @@ int shooting()
 {
   for(int i=0;i<alienNum;i++)
   {
-    if(shot_posx >= alienPos[i][0] && shot_posx <= alienPos[i][0] + alien_width)
-      if(shot_posy >= alienPos[i][1] && shot_posy <= alienPos[i][1] + alien_height)
+    if(shot_posx >= alienPos[i][0] - 3 && shot_posx <= alienPos[i][0] + alien_width + 3)
+      if(shot_posy >= alienPos[i][1] && shot_posy <= alienPos[i][1] + alien_height + 3)
         if(alienLife[i])
           return i;
   }
@@ -885,6 +885,7 @@ void masterReset(boolean next_level)
     currentScore = 0;
     current_level = 1;
     spaceship_shot_speed = 3;
+    changeAlienType(1);
   }
     
   shield1_resistance = 12;
