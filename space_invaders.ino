@@ -203,6 +203,8 @@ int alienShots[][2] ={
 {0,0},{0,0},{0,0}
 };
 
+char* messages[] = {"Ignore", "Ain't Over Yet", "Foolish Earthling!", "Still here?!", "This is the End!", "Impossible!!!", "Error! Error! Error!"};
+
 int HighScores[3] = {0,0,0};
 
 //------------------------------------------------------------------------------------------------------
@@ -882,6 +884,7 @@ void masterReset(boolean next_level)
     spaceship_lives = 3;
     currentScore = 0;
     current_level = 1;
+    spaceship_shot_speed = 3;
   }
     
   shield1_resistance = 12;
@@ -957,10 +960,10 @@ void nextLevel()
 {
   VGA.clear();
   VGA.setColor(GREEN);
-  VGA.printtext(15, 50, "Ain't Over Yet!");
+  ++current_level;
+  VGA.printtext(15, 50, messages[current_level - 1]);
   masterReset(true); 
   
-  ++current_level;
   alien_speed *= current_level; 
   if(current_level == 2)
   {
@@ -978,7 +981,18 @@ void nextLevel()
     alien_height = 8;
   }
   
+  changeAlienType(current_level);
+  
+  spaceship_shot_speed++;
+  
   delay(1500);
+}
+
+void changeAlienType(int lvl)
+{
+  for(int i = 0; i < alienNum; i++)
+    alienType[i] = lvl;
+    
 }
 
 //---------------------------------------------------------------------------------------------------------
