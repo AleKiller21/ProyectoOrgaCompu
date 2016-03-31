@@ -146,6 +146,26 @@ BLACK,BLACK,WHITE,BLACK,BLACK,WHITE,BLACK,WHITE,BLACK,BLACK,WHITE,BLACK,BLACK,
 BLACK,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,BLACK
 };
 
+unsigned char scoreTaker1[]={
+BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,
+BLACK,BLACK,BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,BLACK,BLACK,
+BLACK,BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,BLACK,
+BLACK,WHITE,WHITE,BLACK,WHITE,WHITE,BLACK,WHITE,WHITE,BLACK,WHITE,WHITE,BLACK,WHITE,WHITE,BLACK,
+WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,
+BLACK,BLACK,WHITE,WHITE,WHITE,BLACK,BLACK,WHITE,WHITE,BLACK,BLACK,WHITE,WHITE,WHITE,BLACK,BLACK,
+BLACK,BLACK,BLACK,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,BLACK,BLACK,BLACK
+};
+
+unsigned char scoreTaker2[]={
+BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,
+BLACK,BLACK,BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,BLACK,BLACK,
+BLACK,BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,BLACK,
+BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,
+WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,
+BLACK,BLACK,WHITE,WHITE,WHITE,BLACK,BLACK,WHITE,WHITE,BLACK,BLACK,WHITE,WHITE,WHITE,BLACK,BLACK,
+BLACK,BLACK,BLACK,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,BLACK,BLACK,BLACK
+};
+
 //-------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------
 
@@ -170,11 +190,13 @@ int heart_posx,heart_posy,heart_size;
 int currentScore,currentScore_posx,currentScore_posy;
 
 //aliens
-boolean alienAnimType, moveDirection, goDown, alienShooting;
-int alienNum, animateAlien, alienCols, alienRows, alien_shot_speed;
+boolean alienAnimType, moveDirection, goDown, alienShooting, taker_Destroyed, takerAnimationType, scoreTaken, takerAppears, takerConditions, minScore;
+int alienNum, animateAlien, alienCols, alienRows, alien_shot_speed, animateTaker, takerX, takerSpeed, probabilidadTaker;
 int alien_speed, alien_width, alien_height;
 unsigned char* current_alien1;
 unsigned char* current_alien2;
+unsigned char* taker1;
+unsigned char* taker2;
 
 //shields
 int shield1_resistance, shield2_resistance, shield3_resistance, shield1_posx, shield2_posx, shield3_posx;
@@ -327,6 +349,25 @@ void drawAliens()
   }
 }
 
+void drawTaker()
+{
+    if(takerConditions)
+    {
+      animateTaker++;
+      if(animateTaker == 10)
+      {
+        takerAnimationType = !takerAnimationType;
+        animateTaker = 0;
+      }
+      
+      if(takerAnimationType){
+        VGA.writeArea(takerX, 1, 16, 7, taker1);
+      }else{
+        VGA.writeArea(takerX, 1, 16, 7, taker2);
+      }
+    }
+}
+
 void moveAlienShots()
 {
   for(int i = 0; i < alienNum; i++)
@@ -398,7 +439,11 @@ void showCurrentScore()
     char* scorePtr = "";
     itoa(currentScore,scorePtr,10);
     VGA.setColor(BLUE);
-    VGA.printtext(currentScore_posx,currentScore_posy,scorePtr, true);
+    if(scoreTaken == false){
+      VGA.printtext(currentScore_posx,currentScore_posy,scorePtr, true);
+    }else{
+      VGA.printtext(takerX,6,scorePtr, true);
+    }
 }
 
 void showCurrentLevel()
@@ -426,6 +471,14 @@ int shooting()
         if(alienLife[i])
           return i;
   }
+  return -1;
+}
+
+int shootingTaken()
+{
+    if(shot_posx >= takerX - 3 && shot_posx <= takerX + 19)
+      if(shot_posy >= 1 && shot_posy <= 11)
+         return 1;
   return -1;
 }
 
@@ -468,6 +521,18 @@ void fireShipBullets()
     isShot = true;
     shot_posy = 107;
     shot_posx = spaceship_posx+5;
+  }
+}
+
+//Calcula si el taker aparecera en la ronda actual
+void takerAppear()
+{
+  if(taker_Destroyed == false){
+    int desicion = rand() % 50;
+    int resta = 7 * current_level;
+    if(desicion >= (probabilidadTaker - resta)){
+      takerAppears = true;
+    }
   }
 }
 
@@ -639,11 +704,30 @@ void checkAlienHit()
     alienLife[alienShot] = 0;
     resetSpaceshipShot();
     currentScore += 10*alienType[alienShot];
+    minScore = true;
     
     //alien shot animation
     VGA.writeArea(alienPos[alienShot][0], alienPos[alienShot][1], alien_width, alien_height, explosion);
     alien_shot_speed++;
     alien_speed++;
+    delay(30);
+  }
+}
+
+void checkTakerHit()
+{
+  int alienShot = shootingTaken();
+  if(alienShot != -1)
+  {
+    taker_Destroyed = true;
+    scoreTaken = false;
+    takerAppears = false;
+    takerConditions = false;
+    resetSpaceshipShot();
+    currentScore += 100;
+    
+    //alien shot animation
+    VGA.writeArea(takerX, 1, 16, 7, explosion);
     delay(30);
   }
 }
@@ -767,6 +851,42 @@ void checkLifeHit()
   }
 }
 
+void checkTakerCondit()
+{
+  if(taker_Destroyed == false)
+  {
+    if(takerAppears == true)
+    {
+      if(minScore == true){
+        takerConditions = true;
+     }
+    }
+  }
+}
+
+void checkTakerDirection()
+{
+    if(takerConditions == true)
+    {
+      if(scoreTaken == false){
+        if(takerX <= 2){
+          scoreTaken = true;
+       }else{
+          takerX -= takerSpeed;
+       }
+        }else{
+         if(takerX >= 140){
+           currentScore = 0;
+           taker_Destroyed = true;
+           takerConditions = false;
+           scoreTaken = false;
+         }else{
+           takerX += takerSpeed;;
+         }
+      }
+    }
+}
+
 //----------------------------------------------------------------------------------------------------------
 
 //MOVE CHARACTERS
@@ -805,6 +925,12 @@ void moveShip()
     if(spaceship_posx < 149)
       spaceship_posx+= spaceship_speed;
   }
+}
+
+void moveTaker()
+{
+  checkTakerCondit();
+  checkTakerDirection();
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -864,6 +990,7 @@ void masterReset(boolean next_level)
   //Shots
   //Positions
   //Shields' resistance
+  //Taker stats
   
   for(int i = 0; i < alienNum; i++)
   {
@@ -886,6 +1013,16 @@ void masterReset(boolean next_level)
     current_level = 1;
     spaceship_shot_speed = 3;
     changeAlienType(1);
+    taker_Destroyed = false;
+    scoreTaken = false;
+    takerAppears = false;
+    takerConditions = false;
+    takerX = 145;
+    takerAnimationType = false;
+    animateTaker = 0;
+    minScore = false;
+    takerSpeed = 1;
+    probabilidadTaker = 50;
   }
     
   shield1_resistance = 12;
@@ -931,11 +1068,13 @@ void startGame()
     drawLives();
     drawShipBullet();  
     drawAliens();
+    drawTaker();
     showCurrentScore();
     showCurrentLevel();
     
     fireAlienShot();
-    moveAliens();  
+    moveAliens();
+    moveTaker();  
     moveAlienShots();
     
     checkUserInput();
@@ -945,6 +1084,7 @@ void startGame()
            
     checkShieldCollision();  
     checkAlienHit();
+    checkTakerHit();
     checkLifeHit();
     checkAliensArrival();
     checkLevelFinished();
@@ -985,6 +1125,10 @@ void nextLevel()
   changeAlienType(current_level);
   
   spaceship_shot_speed++;
+  
+  minScore = false;
+  takerSpeed += 1;
+  takerAppear();
   
   delay(1500);
 }
@@ -1056,6 +1200,20 @@ void setup()
 
   game_over = false;
   current_level = 1;
+  
+  taker_Destroyed = false;
+  scoreTaken = false;
+  takerAppears = false;
+  takerConditions = false;
+  takerX = 145;
+  takerAnimationType = false;
+  animateTaker = 0;
+  taker1 = scoreTaker1;
+  taker2 = scoreTaker2;
+  minScore = false;
+  takerSpeed = 1;
+  probabilidadTaker = 50;
+  takerAppear();
 }
 
 void loop()
