@@ -210,8 +210,8 @@ BLACK,BLACK,BLACK,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,BL
 //DECLARACION DE VARIABLES
 
 //menu
-boolean start,about,showHighScores,menuAnimType, menuAlienDirection;
-int menuAnim = 0, menuAlien_posx;
+boolean showMenu,menuAnimType, menuAlienDirection;
+int menuAnim = 0, menuAlien_posx, menu_selection;
 
 //nave
 int spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship_lives;
@@ -229,6 +229,7 @@ boolean isShot;
 int heart_posx,heart_posy,heart_size;
 
 //score
+boolean showNewHighScore;
 int currentScore,currentScore_posx,currentScore_posy;
 
 //aliens
@@ -246,7 +247,7 @@ int shield_posy, shield_margin, shield_width, shield_height;
 
 //general
 boolean game_over;
-int current_level;
+int current_level, current_message;
 
 //-----------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------
@@ -298,7 +299,7 @@ void drawHighScores()
   {
     if(digitalRead(FPGA_BTN_0))
     {
-      showHighScores = false;
+      showMenu = true;
       delay(150);
       return;
     }
@@ -335,10 +336,26 @@ void drawMenu()
   VGA.setColor(GREEN);
   VGA.printtext(25, 30, "SPACE INVADERS");
   
-  VGA.setColor(BLUE);
-  VGA.printtext(20, 60, "BUTTON 1(START)");
-  VGA.printtext(20, 80, "BUTTON 2(ABOUT)");
-  VGA.printtext(1, 100, "BUTTON 3(HIGHSCORES)");
+  if(menu_selection == 0)
+    VGA.setColor(CYAN);
+  else
+    VGA.setColor(BLUE);
+  VGA.printtext(60, 60, "START");
+  
+  if(menu_selection == 1)
+  {
+    VGA.setColor(CYAN);
+  }else
+  {
+    VGA.setColor(BLUE);
+  }
+  VGA.printtext(60, 80, "ABOUT");
+  
+  if(menu_selection == 2)
+    VGA.setColor(CYAN);
+  else
+    VGA.setColor(BLUE);
+  VGA.printtext(45, 100, "HIGHSCORES");
 }
 
 void showControls()
@@ -361,7 +378,7 @@ void showControls()
     
     if(digitalRead(FPGA_BTN_0))
     {
-      about = false;
+      showMenu = true;
       delay(150);
       return;
     }
@@ -435,10 +452,18 @@ void drawGameOver()
   {
     VGA.setColor(GREEN);
     VGA.printtext(80, 60, "GAME OVER");
+    
+    if(showNewHighScore)
+    {
+      VGA.setColor(YELLOW);
+      VGA.printtext(35, 75, "NEW HIGHSCORE");
+    }
+    
     if(digitalRead(FPGA_BTN_3))
     {
+      showNewHighScore = false;
       game_over = false;
-      start = false;
+      showMenu = true;
       return;
     }
   }
@@ -659,17 +684,25 @@ void checkMenuInput()
 {
   if(digitalRead(FPGA_BTN_0))
   {
-    start = true;
+    menu_selection--;
+    if(menu_selection < 0)
+    {
+      menu_selection = 2;
+    }
   }
   
   if(digitalRead(FPGA_BTN_1))
   {
-    about = true;
+    menu_selection++;
+    if(menu_selection > 2)
+    {
+      menu_selection = 0;
+    }
   }
   
   if(digitalRead(FPGA_BTN_2))
   {
-    showHighScores = true;
+    showMenu = false;
   }
 }
 
@@ -695,12 +728,12 @@ void checkCollisionAgainstPlayer()
     }
   }
 }
-
+  
 void checkPowerUpColiision()
 {
   if(power_onScreen)
   {
-    if((power_shield_posX >= spaceship_posx || power_shield_posX - 7 <= spaceship_posx) && (power_shield_posX <= spaceship_posx + spaceship_width))
+    if(((power_shield_posX >= spaceship_posx && power_shield_posX <= spaceship_posx + spaceship_width) || (power_shield_posX + 7 >= spaceship_posx && power_shield_posX + 7 <= spaceship_posx + spaceship_width)) && (power_shield_posX <= spaceship_posx + spaceship_width))
     {
       if(power_shield_posY >=105)
         {
@@ -716,7 +749,7 @@ void checkShotPowerUpColiision()
 {
   if(shot_onSreen)
   {
-    if((power_shotX >= spaceship_posx || power_shotX - 7 <= spaceship_posx) && (power_shotX <= spaceship_posx + spaceship_width))
+    if(((power_shotX >= spaceship_posx && power_shotX <= spaceship_posx + spaceship_width) || (power_shotX + 7 >= spaceship_posx && power_shotX + 7 <= spaceship_posx + spaceship_width)) && (power_shotX <= spaceship_posx + spaceship_width))
     {
       if(power_shotY >=105)
         {
@@ -953,7 +986,7 @@ void checkPause()
       if(digitalRead(FPGA_BTN_3))
       {
         VGA.clear();
-        start = false;
+        showMenu = true;
         masterReset(false);
         return;
       }
@@ -968,6 +1001,7 @@ void checkGameOver()
   {
     if(currentScore > HighScores[2])
     {
+      showNewHighScore = true;
       HighScores[2] = currentScore;
       sortScores();
     }
@@ -1280,6 +1314,13 @@ void startGame()
       }
     VGA.writeArea(spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship);
     
+    checkCollisionAgainstPlayer();
+    checkPowerUpColiision();
+    checkShotPowerUpColiision();
+    checkShield();
+    checkSpaceshipVitality();
+    checkShotPowerDuration();
+    
     drawShield(shield1_posx, shield_posy, shield1_resistance);
     drawShield(shield2_posx, shield_posy, shield2_resistance);
     drawShield(shield3_posx, shield_posy, shield3_resistance);
@@ -1304,13 +1345,6 @@ void startGame()
     moveShotPowerUp();
     
     checkUserInput();
-    
-    checkCollisionAgainstPlayer();
-    checkPowerUpColiision();
-    checkShotPowerUpColiision();
-    checkShield();
-    checkSpaceshipVitality();
-    checkShotPowerDuration();
            
     checkShieldCollision();  
     checkAlienHit();
@@ -1320,7 +1354,7 @@ void startGame()
     checkLevelFinished();
     checkGameOver();
     
-    if(!start)
+    if(showMenu)
       return;
     
     delay(100);
@@ -1332,7 +1366,13 @@ void nextLevel()
   VGA.clear();
   VGA.setColor(GREEN);
   ++current_level;
-  VGA.printtext(15, 50, messages[current_level - 1]);
+  if(current_level > 3)
+  {
+    current_message = (current_message == 6?3:current_message+1);
+    VGA.printtext(15, 50, messages[current_message]);
+  }
+  else
+    VGA.printtext(15, 50, messages[current_level - 1]);
   masterReset(true); 
   
   alien_speed *= current_level; 
@@ -1377,9 +1417,8 @@ void setup()
 {
   VGA.begin(VGAWISHBONESLOT(9),CHARMAPWISHBONESLOT(10));
   
-  start = false;
-  about = false;
-  showHighScores = false;
+  showMenu = true;
+  menu_selection = 0;
   menuAnim = 0;
   menuAnimType = true;
   menuAlien_posx = 64;
@@ -1430,6 +1469,7 @@ void setup()
 
   game_over = false;
   current_level = 1;
+  current_message = 2;
   
   taker_Destroyed = false;
   scoreTaken = false;
@@ -1465,13 +1505,15 @@ void loop()
   VGA.clear();
   drawMenu();
   checkMenuInput();
-  if(start)
-    startGame();
-  if(about)
-    showControls();
-  if(showHighScores)
-    drawHighScores();
-  
+  if(!showMenu)
+  {
+    if(menu_selection == 0)
+      startGame();
+    if(menu_selection == 1)
+      showControls();
+    if(menu_selection == 2)
+      drawHighScores();
+  }
   delay(100);
 }
 
