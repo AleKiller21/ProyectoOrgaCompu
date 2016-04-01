@@ -14,6 +14,37 @@ GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,
 GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN
 };
 
+unsigned char shieldPoweup[]={
+BLACK,BLACK,BLACK,BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,BLACK,BLACK,BLACK,
+BLACK,BLACK,WHITE,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,WHITE,BLACK,BLACK,
+BLACK,WHITE,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,WHITE,BLACK,
+BLACK,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,BLACK,
+WHITE,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,WHITE,
+WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,
+WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE,
+WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,BLACK,WHITE
+};
+
+unsigned char powerUp[]={
+BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,
+BLUE,BLACK,BLACK,BLACK,BLACK,BLACK,BLUE,
+BLUE,BLACK,BLACK,BLUE,BLACK,BLACK,BLUE,
+BLUE,BLACK,BLUE,BLUE,BLUE,BLACK,BLUE,
+BLUE,BLACK,BLACK,BLUE,BLACK,BLACK,BLUE,
+BLACK,BLUE,BLACK,BLACK,BLACK,BLUE,BLACK,
+BLACK,BLACK,BLUE,BLUE,BLUE,BLACK,BLACK
+};
+
+unsigned char powerUpShot[]={
+BLACK,BLACK,BLACK,RED,BLACK,BLACK,BLACK,
+BLACK,RED,RED,RED,RED,RED,BLACK,
+BLACK,RED,BLACK,RED,BLACK,RED,BLACK,
+RED,RED,RED,RED,RED,RED,RED,
+BLACK,RED,BLACK,RED,BLACK,RED,BLACK,
+BLACK,RED,RED,RED,RED,RED,BLACK,
+BLACK,BLACK,BLACK,RED,BLACK,BLACK,BLACK
+};
+
 unsigned char shield1[]={
 BLACK,BLACK,BLACK,GREEN,GREEN,GREEN,GREEN,GREEN,BLACK,BLACK,BLACK,
 BLACK,BLACK,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,BLACK,BLACK,
@@ -61,6 +92,13 @@ GREEN,
 GREEN,
 GREEN,
 GREEN
+};
+
+unsigned char power_shot[]={
+RED,
+RED,
+RED,
+RED
 };
 
 unsigned char shotAlien[]={
@@ -178,6 +216,10 @@ int menuAnim = 0, menuAlien_posx;
 //nave
 int spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship_lives;
 int spaceship_speed, spaceship_shot_speed;
+
+//power-up
+int shield_resistance, contador_shield, power_shield_posX, power_shield_posY, shot_counter, power_shotX, power_shotY, shot_time;
+boolean shield_active, power_onScreen, shot_power, shot_onSreen;
 
 //disparo
 int shot_posy, shot_posx;
@@ -410,6 +452,37 @@ void drawLives()
   }
 }
 
+void drawShieldCapacity()
+{
+  if(shield_active)
+  {
+    for(int i=0;i<shield_resistance;i++)
+  {
+    VGA.writeArea(0+(i*7+i), 90, 7, 7, powerUp);
+  }
+  }
+}
+
+void drawShotActive()
+{
+  if(shot_power)
+  {
+    VGA.writeArea(0, 80, 7, 7, powerUpShot);
+  }
+}
+
+void drawPowerUp()
+{
+  if(power_onScreen)
+    VGA.writeArea(power_shield_posX, power_shield_posY, 7, 7, powerUp);
+}
+
+void drawShotPowerUp()
+{
+  if(shot_onSreen)
+    VGA.writeArea(power_shotX, power_shotY, 7, 7, powerUpShot);
+}
+
 void drawShield(int shield_x, int shield_y, int shield_resistance)
 {
   if(shield_resistance > 0)
@@ -430,7 +503,13 @@ void drawShipBullet()
   if(isShot)
   {
     shot_posy-= spaceship_shot_speed;
-    VGA.writeArea(shot_posx, shot_posy, 1, 3, shot);
+    if(shot_power)
+    {
+      VGA.writeArea(shot_posx, shot_posy, 1, 3, power_shot);
+    }else
+    {
+      VGA.writeArea(shot_posx, shot_posy, 1, 3, shot);
+    }
   }
 }
 
@@ -536,6 +615,42 @@ void takerAppear()
   }
 }
 
+void powerUpAppear()
+{
+  contador_shield++;
+  if(contador_shield >= 30 && power_onScreen == false)
+  {
+    int desicion = rand() % 100;
+    int resta = 15 * current_level;
+    if(desicion >= (100 - resta))
+    {
+      power_onScreen = true;
+      int posX = rand() % 145;
+      power_shield_posX = posX + 2;
+      power_shield_posY = 50;
+    }
+    contador_shield = 0;
+  }
+}
+
+void ShotpowerUpAppear()
+{
+  shot_counter++;
+  if(shot_counter >= 30 && shot_onSreen == false && shot_power == false)
+  {
+    int desicion = rand() % 100;
+    int resta = 10 * current_level;
+    if(desicion >= (100 - resta))
+    {
+      shot_onSreen = true;
+      int posX = rand() % 145;
+      power_shotX = posX + 2;
+      power_shotY = 50;
+    }
+    shot_counter = 0;
+  }
+}
+
 //----------------------------------------------------------------------------------------------------
 
 //CHECK ACTIONS
@@ -567,11 +682,70 @@ void checkCollisionAgainstPlayer()
       if(alienShots[i][0] >= spaceship_posx && alienShots[i][0] <= spaceship_posx + spaceship_width)
         if(alienShots[i][1] >= spaceship_posy && alienShots[i][1] <= spaceship_posy + spaceship_height)
         {
-          spaceship_lives--;
+          if(shield_active)
+          {
+            shield_resistance--;
+          }else
+          {
+            spaceship_lives--;
+          }
           resetAlienShot(i);
           break;
         }
     }
+  }
+}
+
+void checkPowerUpColiision()
+{
+  if(power_onScreen)
+  {
+    if((power_shield_posX >= spaceship_posx || power_shield_posX - 7 <= spaceship_posx) && (power_shield_posX <= spaceship_posx + spaceship_width))
+    {
+      if(power_shield_posY >=105)
+        {
+          power_onScreen = false;
+          shield_resistance = 3;
+          shield_active = true;
+        }
+    }
+  }
+}
+
+void checkShotPowerUpColiision()
+{
+  if(shot_onSreen)
+  {
+    if((power_shotX >= spaceship_posx || power_shotX - 7 <= spaceship_posx) && (power_shotX <= spaceship_posx + spaceship_width))
+    {
+      if(power_shotY >=105)
+        {
+          shot_onSreen = false;
+          shot_power = true;
+        }
+    }
+  }
+}
+
+void checkShotPowerDuration()
+{
+  if(shot_power == true)
+  {
+    shot_time++;
+    if(shot_time == 50)
+    {
+      shot_time = 0;
+      shot_power = false;
+    }
+  }
+}
+
+void checkShield()
+{
+  if(shield_active)
+  {
+    if(shield_resistance <= 0)
+      shield_active = false;
   }
 }
 
@@ -716,6 +890,8 @@ void checkAlienHit()
 
 void checkTakerHit()
 {
+  if(!taker_Destroyed)
+  {
   int alienShot = shootingTaken();
   if(alienShot != -1)
   {
@@ -729,6 +905,7 @@ void checkTakerHit()
     //alien shot animation
     VGA.writeArea(takerX, 1, 16, 7, explosion);
     delay(30);
+  }
   }
 }
 
@@ -933,15 +1110,38 @@ void moveTaker()
   checkTakerDirection();
 }
 
+void movePowerUp()
+{
+  if(power_onScreen)
+  {
+    power_shield_posY++;
+    if(power_shield_posY >= 120)
+      power_onScreen = false;
+  }
+}
+
+void moveShotPowerUp()
+{
+  if(shot_onSreen)
+  {
+    power_shotY++;
+    if(power_shotY >= 120)
+      shot_onSreen = false;
+  }
+}
+
 //-----------------------------------------------------------------------------------------------------------
 
 //RESET
 
 void resetSpaceshipShot()
 {
-  isShot = false;
-  shot_posx = 0;
-  shot_posy = 0;
+  if(!shot_power)
+  {
+    isShot = false;
+    shot_posx = 0;
+    shot_posy = 0;
+  }
 }
 
 void resetAlienShot(int num)
@@ -1024,6 +1224,20 @@ void masterReset(boolean next_level)
     takerSpeed = 1;
     probabilidadTaker = 50;
   }
+  
+  shield_resistance = 0;
+  shield_active = false;
+  power_shield_posY = 50;
+  power_shield_posX = 50;
+  contador_shield = 0;
+  power_onScreen = false;
+  
+  shot_counter = 0;
+  power_shotX = 50;
+  power_shotY = 50;
+  shot_time = 0;
+  shot_power = false;
+  shot_onSreen = false;
     
   shield1_resistance = 12;
   shield2_resistance = 12;
@@ -1060,27 +1274,43 @@ void startGame()
   while(true)
   {
     VGA.clear();
+    if(shield_active)
+      {
+        VGA.writeArea(spaceship_posx-2, spaceship_posy-2, spaceship_width+4, spaceship_height+2, shieldPoweup);
+      }
     VGA.writeArea(spaceship_posx, spaceship_posy, spaceship_width, spaceship_height, spaceship);
     
     drawShield(shield1_posx, shield_posy, shield1_resistance);
     drawShield(shield2_posx, shield_posy, shield2_resistance);
     drawShield(shield3_posx, shield_posy, shield3_resistance);
     drawLives();
+    drawShieldCapacity();
+    drawShotActive();
     drawShipBullet();  
     drawAliens();
     drawTaker();
     showCurrentScore();
     showCurrentLevel();
+    powerUpAppear();
+    ShotpowerUpAppear();
+    drawPowerUp();
+    drawShotPowerUp();
     
     fireAlienShot();
     moveAliens();
     moveTaker();  
     moveAlienShots();
+    movePowerUp();
+    moveShotPowerUp();
     
     checkUserInput();
     
     checkCollisionAgainstPlayer();
+    checkPowerUpColiision();
+    checkShotPowerUpColiision();
+    checkShield();
     checkSpaceshipVitality();
+    checkShotPowerDuration();
            
     checkShieldCollision();  
     checkAlienHit();
@@ -1214,6 +1444,20 @@ void setup()
   takerSpeed = 1;
   probabilidadTaker = 50;
   takerAppear();
+  
+  shield_resistance = 0;
+  shield_active = false;
+  power_shield_posY = 50;
+  power_shield_posX = 50;
+  contador_shield = 0;
+  power_onScreen = false;
+  
+  shot_counter = 0;
+  power_shotX = 50;
+  power_shotY = 50;
+  shot_time = 0;
+  shot_power = false;
+  shot_onSreen = false;
 }
 
 void loop()
