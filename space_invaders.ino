@@ -294,10 +294,11 @@ void drawHighScores()
   
   VGA.setColor(RED);
   VGA.printtext(50, 107, "BUTTON 1(MAIN MENU)");
+  delay(150);
   
   while(true)
   {
-    if(digitalRead(FPGA_BTN_0))
+    if(digitalRead(FPGA_BTN_2) || digitalRead(FPGA_GPIO_0))
     {
       showMenu = true;
       delay(150);
@@ -361,6 +362,7 @@ void drawMenu()
 void showControls()
 {
   VGA.clear();
+  delay(150);
   while(true)
   {
     VGA.setColor(BLUE);
@@ -376,7 +378,7 @@ void showControls()
     VGA.setColor(RED);
     VGA.printtext(3, 107, "BUTTON 1(MAIN MENU)");
     
-    if(digitalRead(FPGA_BTN_0))
+    if(digitalRead(FPGA_BTN_2) || digitalRead(FPGA_GPIO_0))
     {
       showMenu = true;
       delay(150);
@@ -459,11 +461,12 @@ void drawGameOver()
       VGA.printtext(35, 75, "NEW HIGHSCORE");
     }
     
-    if(digitalRead(FPGA_BTN_3))
+    if(digitalRead(FPGA_BTN_2)  || digitalRead(FPGA_GPIO_0))
     {
       showNewHighScore = false;
       game_over = false;
       showMenu = true;
+      delay(150);
       return;
     }
   }
@@ -620,7 +623,7 @@ void fireAlienShot()
 
 void fireShipBullets()
 {
-  if(digitalRead(FPGA_BTN_2))
+  if(digitalRead(FPGA_BTN_2) || digitalRead(FPGA_GPIO_0))
   {
     isShot = true;
     shot_posy = 107;
@@ -682,7 +685,7 @@ void ShotpowerUpAppear()
 
 void checkMenuInput()
 {
-  if(digitalRead(FPGA_BTN_0))
+  if(digitalRead(FPGA_BTN_0) || digitalRead(FPGA_GPIO_1))
   {
     menu_selection--;
     if(menu_selection < 0)
@@ -691,7 +694,7 @@ void checkMenuInput()
     }
   }
   
-  if(digitalRead(FPGA_BTN_1))
+  if(digitalRead(FPGA_BTN_1) || digitalRead(FPGA_GPIO_2))
   {
     menu_selection++;
     if(menu_selection > 2)
@@ -700,7 +703,7 @@ void checkMenuInput()
     }
   }
   
-  if(digitalRead(FPGA_BTN_2))
+  if(digitalRead(FPGA_BTN_2) || digitalRead(FPGA_GPIO_0))
   {
     showMenu = false;
   }
@@ -960,7 +963,7 @@ void checkPause()
     {
       VGA.setColor(227, 38, 54);
       VGA.printtext(60,45,"PAUSED");
-      VGA.printtext(20,60,"BUTTON 4 TO EXIT");
+      VGA.printtext(5,60,"ACTION BTN TO EXIT");
       
       pauseAnim++;
       
@@ -983,11 +986,12 @@ void checkPause()
       }
       
       //regresar al menu
-      if(digitalRead(FPGA_BTN_3))
+      if(digitalRead(FPGA_BTN_2) || digitalRead(FPGA_GPIO_0))
       {
         VGA.clear();
         showMenu = true;
         masterReset(false);
+        delay(150);
         return;
       }
       delay(100);
@@ -1126,12 +1130,12 @@ void moveAliensHelper()
 
 void moveShip()
 {
-  if(digitalRead(FPGA_BTN_0))
+  if(digitalRead(FPGA_BTN_0) || digitalRead(FPGA_GPIO_1))
   {
     if(spaceship_posx > 1)
       spaceship_posx-= spaceship_speed;
   }
-  if(digitalRead(FPGA_BTN_1))
+  if(digitalRead(FPGA_BTN_1) || digitalRead(FPGA_GPIO_2))
   {
     if(spaceship_posx < 149)
       spaceship_posx+= spaceship_speed;
